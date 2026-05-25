@@ -1,4 +1,4 @@
-import { GoogleGenerativeAI } from "@google/generative-ai";
+import Groq from "groq-sdk";
 import { NextRequest, NextResponse } from "next/server";
 import { Ingredient, NutritionGoals, WeekPlan, DayPlan, Meal } from "@/lib/types";
 import { DAYS, generateId, computeDayTotals } from "@/lib/utils";
@@ -116,19 +116,29 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: "No ingredients provided" }, { status: 400 });
     }
 
-    if (!process.env.GEMINI_API_KEY) {
-      return NextResponse.json({ error: "GEMINI_API_KEY not configured" }, { status: 500 });
+    if (!process.env.GROQ_API_KEY) {
+      return NextResponse.json({ error: "GROQ_API_KEY not configured" }, { status: 500 });
     }
 
-    const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
-    const model = genAI.getGenerativeModel({
-      model: "gemini-1.5-flash-latest",
-      systemInstruction:
-        "You are an expert Indian nutritionist and chef AI. You deeply understand Indian cuisine — dals, sabzis, rotis, rice dishes, regional variations. You return only valid JSON meal plans with authentic Indian meal names and cooking instructions. Never include markdown code fences or explanations — return raw JSON only.",
+    const client = new Groq({ apiKey: process.env.GROQ_API_KEY });
+
+    const completion = await client.chat.completions.create({
+      model: "llama-3.3-70b-versatile",
+      max_tokens: 8000,
+      messages: [
+        {
+          role: "system",
+          content:
+            "You are an expert Indian nutritionist and chef AI. You deeply understand Indian cuisine — dals, sabzis, rotis, rice dishes, regional variations. You return only valid JSON meal plans with authentic Indian meal names and cooking instructions. Never include markdown code fences or explanations — return raw JSON only.",
+        },
+        {
+          role: "user",
+          content: buildPrompt(ingredients, goals),
+        },
+      ],
     });
 
-    const result = await model.generateContent(buildPrompt(ingredients, goals));
-    const rawText = result.response.text();
+    const rawText = completion.choices[0]?.message?.content ?? "";
 
     let parsed: { days: unknown[] };
     try {
