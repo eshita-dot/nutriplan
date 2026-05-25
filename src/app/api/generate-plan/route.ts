@@ -63,36 +63,10 @@ DAILY NUTRITION TARGETS:
 - ${restrictions}
 ${goals.includeSnacks ? "- Include 1 snack per day" : "- No snacks needed"}
 
-MEAL INSPIRATION (use these as guides for authentic Indian dishes, adapt to available ingredients):
-Breakfast ideas: ${INDIAN_MEAL_IDEAS.breakfast.slice(0, 6).join(", ")}
-Lunch ideas: ${INDIAN_MEAL_IDEAS.lunch.slice(0, 6).join(", ")}
-Dinner ideas: ${INDIAN_MEAL_IDEAS.dinner.slice(0, 6).join(", ")}
-${goals.includeSnacks ? `Snack ideas: ${INDIAN_MEAL_IDEAS.snack.slice(0, 5).join(", ")}` : ""}
+MEAL INSPIRATION: ${INDIAN_MEAL_IDEAS.breakfast.slice(0, 4).join(", ")} / ${INDIAN_MEAL_IDEAS.lunch.slice(0, 4).join(", ")} / ${INDIAN_MEAL_IDEAS.dinner.slice(0, 4).join(", ")}${goals.includeSnacks ? ` / ${INDIAN_MEAL_IDEAS.snack.slice(0, 3).join(", ")}` : ""}
 
-Return a JSON object with exactly this structure (raw JSON only, no markdown fences):
-{
-  "days": [
-    {
-      "day": "Monday",
-      "breakfast": {
-        "name": "Indian meal name (e.g. Moong Dal Chilla)",
-        "description": "One appetizing sentence describing the dish",
-        "calories": 420,
-        "protein": 18,
-        "carbs": 55,
-        "fat": 10,
-        "prepTime": 15,
-        "instructions": ["Step 1 with Indian cooking technique", "Step 2", "Step 3", "Step 4"],
-        "ingredients": [
-          { "name": "Exact ingredient name from list", "amount": 80, "unit": "g" }
-        ]
-      },
-      "lunch": { ...same structure },
-      "dinner": { ...same structure },
-      "snacks": [{ ...same structure }]
-    }
-  ]
-}
+Return a JSON object (raw JSON only, no markdown):
+{"days":[{"day":"Monday","breakfast":{"name":"...","description":"...","calories":0,"protein":0,"carbs":0,"fat":0,"prepTime":0,"instructions":["step1","step2"],"ingredients":[{"name":"...","amount":0,"unit":"g"}]},"lunch":{...},"dinner":{...},"snacks":[]}]}
 
 Rules:
 1. All meal names must be authentic Indian dish names (Hindi/regional names preferred)
@@ -124,7 +98,7 @@ export async function POST(req: NextRequest) {
 
     const completion = await client.chat.completions.create({
       model: "llama-3.3-70b-versatile",
-      max_tokens: 32000,
+      max_tokens: 8000,
       response_format: { type: "json_object" },
       messages: [
         {
