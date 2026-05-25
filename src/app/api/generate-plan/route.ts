@@ -1,9 +1,7 @@
-import Anthropic from "@anthropic-ai/sdk";
+import { GoogleGenerativeAI } from "@google/generative-ai";
 import { NextRequest, NextResponse } from "next/server";
 import { Ingredient, NutritionGoals, WeekPlan, DayPlan, Meal } from "@/lib/types";
 import { DAYS, generateId, computeDayTotals } from "@/lib/utils";
-
-const client = new Anthropic();
 
 const INDIAN_MEAL_IDEAS = {
   breakfast: [
@@ -118,22 +116,19 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: "No ingredients provided" }, { status: 400 });
     }
 
-    if (!process.env.ANTHROPIC_API_KEY) {
-      return NextResponse.json({ error: "ANTHROPIC_API_KEY not configured" }, { status: 500 });
+    if (!process.env.GEMINI_API_KEY) {
+      return NextResponse.json({ error: "GEMINI_API_KEY not configured" }, { status: 500 });
     }
 
-    const message = await client.messages.create({
-      model: "claude-sonnet-4-6",
-      max_tokens: 8000,
-      system:
+    const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
+    const model = genAI.getGenerativeModel({
+      model: "gemini-1.5-flash",
+      systemInstruction:
         "You are an expert Indian nutritionist and chef AI. You deeply understand Indian cuisine — dals, sabzis, rotis, rice dishes, regional variations. You return only valid JSON meal plans with authentic Indian meal names and cooking instructions. Never include markdown code fences or explanations — return raw JSON only.",
-      messages: [{ role: "user", content: buildPrompt(ingredients, goals) }],
     });
 
-    const rawText = message.content
-      .filter((b: { type: string }) => b.type === "text")
-      .map((b: { type: string; text?: string }) => b.text ?? "")
-      .join("");
+    const result = await model.generateContent(buildPrompt(ingredients, goals));
+    const rawText = result.response.text();
 
     let parsed: { days: unknown[] };
     try {
