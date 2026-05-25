@@ -99,7 +99,7 @@ Rules:
 2. No two days should repeat the same meal
 3. Vary regional cuisines across the week: North Indian, South Indian, Maharashtrian, Bengali, Gujarati
 4. Keep daily nutrition totals close to targets (within 10%)
-5. Instructions should reflect real Indian cooking (tadka, tempering, rolling rotis, etc.) — 3-6 steps
+5. Instructions should reflect real Indian cooking (tadka, tempering, rolling rotis, etc.) — 2-3 steps max, keep each step brief
 6. All numeric values must be realistic positive integers
 7. Include all 7 days: Monday through Sunday
 8. Ingredient names in the ingredients array must match the available ingredients list exactly
@@ -124,7 +124,8 @@ export async function POST(req: NextRequest) {
 
     const completion = await client.chat.completions.create({
       model: "llama-3.3-70b-versatile",
-      max_tokens: 8000,
+      max_tokens: 32000,
+      response_format: { type: "json_object" },
       messages: [
         {
           role: "system",
