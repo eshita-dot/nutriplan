@@ -122,7 +122,7 @@ export async function POST(req: NextRequest) {
 
     const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
     const model = genAI.getGenerativeModel({
-      model: "gemini-2.0-flash",
+      model: "gemini-1.5-flash-latest",
       systemInstruction:
         "You are an expert Indian nutritionist and chef AI. You deeply understand Indian cuisine — dals, sabzis, rotis, rice dishes, regional variations. You return only valid JSON meal plans with authentic Indian meal names and cooking instructions. Never include markdown code fences or explanations — return raw JSON only.",
     });
