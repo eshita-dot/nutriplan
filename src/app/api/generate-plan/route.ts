@@ -215,13 +215,30 @@ export const maxDuration = 60;
 
 async function geminiJSON(apiKey: string, systemPrompt: string, userPrompt: string): Promise<Record<string, unknown>> {
   const genAI = new GoogleGenerativeAI(apiKey);
-  const model = genAI.getGenerativeModel({
-    model: "gemini-2.5-flash",
-    systemInstruction: systemPrompt,
-    generationConfig: { responseMimeType: "application/json" },
-  });
-  const result = await model.generateContent(userPrompt);
-  return JSON.parse(result.response.text());
+  const models = ["gemini-2.5-flash", "gemini-2.0-flash-lite-001", "gemini-2.0-flash-001"];
+  let lastErr: unknown;
+  for (const modelName of models) {
+    for (let attempt = 0; attempt < 3; attempt++) {
+      try {
+        const model = genAI.getGenerativeModel({
+          model: modelName,
+          systemInstruction: systemPrompt,
+          generationConfig: { responseMimeType: "application/json" },
+        });
+        const result = await model.generateContent(userPrompt);
+        return JSON.parse(result.response.text());
+      } catch (err: unknown) {
+        lastErr = err;
+        const msg = err instanceof Error ? err.message : String(err);
+        if (msg.includes("503") || msg.includes("high demand") || msg.includes("Service Unavailable")) {
+          await new Promise((r) => setTimeout(r, (attempt + 1) * 3000));
+          continue;
+        }
+        break; // non-503 error — try next model
+      }
+    }
+  }
+  throw lastErr;
 }
 
 export async function POST(req: NextRequest) {
