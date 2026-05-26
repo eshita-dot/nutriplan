@@ -201,72 +201,78 @@ export function IngredientsPanel({ ingredients, onAdd, onRemove }: Props) {
         </button>
 
         {showQuick && (
-          <div className="px-5 pb-5 space-y-4 border-t border-stone-100">
+          <div className="border-t border-stone-100">
             {/* Search */}
-            <div className="relative mt-4">
-              <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-stone-400" />
-              <input
-                type="text"
-                placeholder="Search ingredients..."
-                value={search}
-                onChange={(e) => setSearch(e.target.value)}
-                className="w-full bg-stone-50 border border-stone-200 rounded-xl pl-9 pr-4 py-2 text-sm text-stone-700 placeholder-stone-400 focus:outline-none focus:border-teal-400 transition-colors"
-              />
+            <div className="px-5 pt-4">
+              <div className="relative">
+                <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-stone-400" />
+                <input
+                  type="text"
+                  placeholder="Search ingredients..."
+                  value={search}
+                  onChange={(e) => setSearch(e.target.value)}
+                  className="w-full bg-stone-50 border border-stone-200 rounded-xl pl-9 pr-4 py-2 text-sm text-stone-700 placeholder-stone-400 focus:outline-none focus:border-teal-400 transition-colors"
+                />
+              </div>
             </div>
 
-            {/* Category tabs */}
+            {/* Category tab bar */}
             {!search && (
-              <div className="flex gap-2 flex-wrap">
-                {QUICK_ADD_GROUPS.map((g) => (
-                  <button
-                    key={g.label}
-                    onClick={() => setActiveGroup(g.label)}
-                    className={cn(
-                      "px-3 py-1.5 rounded-full text-xs font-semibold transition-all border",
-                      activeGroup === g.label
-                        ? "bg-teal-500 text-white border-teal-500"
-                        : "bg-white text-stone-600 border-stone-200 hover:border-teal-300 hover:text-teal-700"
-                    )}
-                  >
-                    {g.emoji} {g.label}
-                  </button>
-                ))}
+              <div className="mt-3 border-b border-stone-100">
+                <div className="flex overflow-x-auto px-5 gap-0 scrollbar-none">
+                  {QUICK_ADD_GROUPS.map((g) => (
+                    <button
+                      key={g.label}
+                      onClick={() => setActiveGroup(g.label)}
+                      className={cn(
+                        "shrink-0 px-3 py-2.5 text-xs font-semibold transition-all border-b-2 whitespace-nowrap",
+                        activeGroup === g.label
+                          ? "border-teal-500 text-teal-700"
+                          : "border-transparent text-stone-500 hover:text-stone-700"
+                      )}
+                    >
+                      {g.emoji} {g.label}
+                    </button>
+                  ))}
+                </div>
               </div>
             )}
 
-            {/* Items — click to toggle add/remove */}
-            <div className="flex flex-wrap gap-2">
-              {filteredItems.map((item) => {
-                const added = ingredients.some((i) => i.name === item.name);
-                return (
-                  <button
-                    key={item.name}
-                    onClick={() => quickToggle(item)}
-                    className={cn(
-                      "px-3 py-1.5 rounded-full text-xs font-medium border transition-all",
-                      added
-                        ? "border-teal-400 bg-teal-50 text-teal-800 hover:bg-red-50 hover:border-red-300 hover:text-red-600"
-                        : "border-stone-200 bg-white text-stone-600 hover:border-teal-300 hover:bg-teal-50 hover:text-teal-800"
-                    )}
-                    title={added ? "Click to remove" : "Click to add"}
-                  >
-                    {added ? "✓ " : "+ "}{item.name}
-                  </button>
-                );
-              })}
-              {filteredItems.length === 0 && (
-                <p className="text-xs text-stone-400 py-2">No ingredients match.</p>
+            {/* Items */}
+            <div className="px-5 pt-3 pb-5 space-y-3">
+              <div className="flex flex-wrap gap-2">
+                {filteredItems.map((item) => {
+                  const added = ingredients.some((i) => i.name === item.name);
+                  return (
+                    <button
+                      key={item.name}
+                      onClick={() => quickToggle(item)}
+                      className={cn(
+                        "px-3 py-1.5 rounded-full text-xs font-medium border transition-all",
+                        added
+                          ? "border-teal-400 bg-teal-50 text-teal-800 hover:bg-red-50 hover:border-red-300 hover:text-red-600"
+                          : "border-stone-200 bg-white text-stone-600 hover:border-teal-300 hover:bg-teal-50 hover:text-teal-800"
+                      )}
+                      title={added ? "Click to remove" : "Click to add"}
+                    >
+                      {added ? "✓ " : "+ "}{item.name}
+                    </button>
+                  );
+                })}
+                {filteredItems.length === 0 && (
+                  <p className="text-xs text-stone-400 py-2">No ingredients match.</p>
+                )}
+              </div>
+
+              {!search && (
+                <button
+                  onClick={() => addGroup(currentGroup)}
+                  className="text-xs text-teal-600 hover:text-teal-700 font-semibold transition-colors"
+                >
+                  + Add all {currentGroup.label.toLowerCase()}
+                </button>
               )}
             </div>
-
-            {!search && (
-              <button
-                onClick={() => addGroup(currentGroup)}
-                className="text-xs text-teal-600 hover:text-teal-700 font-semibold transition-colors"
-              >
-                + Add all {currentGroup.label.toLowerCase()}
-              </button>
-            )}
           </div>
         )}
       </div>
