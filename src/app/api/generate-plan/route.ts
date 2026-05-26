@@ -211,6 +211,29 @@ Respond with this JSON schema filled in with your generated meal (replace all <p
 {"day":{"day":"${dayName}","breakfast":{"name":"<breakfast name>","description":"<1 sentence>","calories":<kcal>,"protein":<g>,"carbs":<g>,"fat":<g>,"prepTime":<min>,"instructions":["<step1>","<step2>","<step3>"],"ingredients":[{"name":"<ingredient>","amount":<number>,"unit":"g"}]},"lunch":{"name":"<Dal + Sabzi + Grain>","description":"<1 sentence>","calories":<kcal>,"protein":<g>,"carbs":<g>,"fat":<g>,"prepTime":<min>,"instructions":["<step1>","<step2>","<step3>"],"ingredients":[{"name":"<ingredient>","amount":<number>,"unit":"g"},{"name":"<ingredient>","amount":<number>,"unit":"g"}]},"dinner":{"name":"<Dal + Sabzi + Grain>","description":"<1 sentence>","calories":<kcal>,"protein":<g>,"carbs":<g>,"fat":<g>,"prepTime":<min>,"instructions":["<step1>","<step2>","<step3>"],"ingredients":[{"name":"<ingredient>","amount":<number>,"unit":"g"}]},${snackSchema}}}`;
 }
 
+export const maxDuration = 60;
+
+type GroqParams = { model: string; max_tokens: number; response_format: { type: string }; messages: { role: string; content: string }[] };
+
+async function groqWithRetry(client: Groq, params: GroqParams) {
+  for (let attempt = 0; attempt < 3; attempt++) {
+    try {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      return await (client.chat.completions.create as (p: GroqParams) => Promise<any>)(params);
+    } catch (err: unknown) {
+      const msg = err instanceof Error ? err.message : String(err);
+      const tpmMatch = msg.match(/tokens per minute.*?try again in ([\d.]+)s/i);
+      if (tpmMatch && attempt < 2) {
+        const waitMs = Math.ceil(parseFloat(tpmMatch[1]) * 1000) + 1000;
+        await new Promise((r) => setTimeout(r, waitMs));
+        continue;
+      }
+      throw err;
+    }
+  }
+  throw new Error("Max retries exceeded");
+}
+
 export async function POST(req: NextRequest) {
   try {
     const body = await req.json();
@@ -231,7 +254,7 @@ export async function POST(req: NextRequest) {
         mealType: string;
         existingMeals: string[];
       };
-      const completion = await client.chat.completions.create({
+      const completion = await groqWithRetry(client, {
         model: "llama-3.1-8b-instant",
         max_tokens: 1500,
         response_format: { type: "json_object" },
@@ -252,7 +275,7 @@ export async function POST(req: NextRequest) {
         dayName: string;
         otherDayMeals: string[];
       };
-      const completion = await client.chat.completions.create({
+      const completion = await groqWithRetry(client, {
         model: "llama-3.1-8b-instant",
         max_tokens: 2500,
         response_format: { type: "json_object" },
@@ -289,7 +312,7 @@ export async function POST(req: NextRequest) {
         (d) => `${d.day}: ${[d.breakfast?.name, d.lunch?.name, d.dinner?.name].filter(Boolean).join(", ")}`
       );
 
-      const completion = await client.chat.completions.create({
+      const completion = await groqWithRetry(client, {
         model: "llama-3.1-8b-instant",
         max_tokens: 2500,
         response_format: { type: "json_object" },
