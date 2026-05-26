@@ -2,11 +2,7 @@
 import { WeekPlan } from "@/lib/types";
 import { getCaloriePresetKey, CALORIE_PRESETS } from "@/lib/utils";
 
-interface Props {
-  plan: WeekPlan;
-}
-
-export function WeekSummary({ plan }: Props) {
+export function WeekSummary({ plan }: { plan: WeekPlan }) {
   const presetKey = getCaloriePresetKey(plan.goals.dailyCalories);
   const preset = CALORIE_PRESETS.find((p) => p.key === presetKey) ?? CALORIE_PRESETS[1];
 
@@ -19,35 +15,23 @@ export function WeekSummary({ plan }: Props) {
     (d) => d.totalCalories >= preset.min && d.totalCalories <= preset.max
   ).length;
 
+  const stats = [
+    { emoji: "🎯", value: `~${Math.round(avg.calories / 50) * 50}`, unit: "kcal/day", label: "Avg calories", sub: `target ${preset.range.split(" ")[0]}`, color: "border-orange-200 bg-orange-50" },
+    { emoji: "💪", value: `~${Math.round(avg.protein / 5) * 5}g`, unit: "protein/day", label: "Avg protein", sub: `target ~${preset.protein}g`, color: "border-sky-200 bg-sky-50" },
+    { emoji: "✅", value: `${daysInRange}/${plan.days.length}`, unit: "days", label: "On target", sub: `${preset.emoji} ${preset.label}`, color: "border-emerald-200 bg-emerald-50" },
+    { emoji: "🍽️", value: String(plan.days.length * (plan.goals.includeSnacks ? 4 : 3)), unit: "meals total", label: "Planned", sub: plan.goals.includeSnacks ? "with evening snack" : "no snacks", color: "border-violet-200 bg-violet-50" },
+  ];
+
   return (
     <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
-      <div className="bg-stone-900/60 border border-stone-800 rounded-2xl px-4 py-4 text-center">
-        <div className="text-2xl mb-1">🎯</div>
-        <div className="text-lg font-bold text-orange-400">~{Math.round(avg.calories / 50) * 50}</div>
-        <div className="text-xs text-stone-400 font-medium">avg kcal/day</div>
-        <div className="text-xs text-stone-600 mt-1">target {preset.range.split(" ")[0]}</div>
-      </div>
-
-      <div className="bg-stone-900/60 border border-stone-800 rounded-2xl px-4 py-4 text-center">
-        <div className="text-2xl mb-1">💪</div>
-        <div className="text-lg font-bold text-sky-400">~{Math.round(avg.protein / 5) * 5}g</div>
-        <div className="text-xs text-stone-400 font-medium">avg protein/day</div>
-        <div className="text-xs text-stone-600 mt-1">target ~{preset.protein}g</div>
-      </div>
-
-      <div className="bg-stone-900/60 border border-stone-800 rounded-2xl px-4 py-4 text-center">
-        <div className="text-2xl mb-1">✅</div>
-        <div className="text-lg font-bold text-green-400">{daysInRange}/{plan.days.length}</div>
-        <div className="text-xs text-stone-400 font-medium">days on target</div>
-        <div className="text-xs text-stone-600 mt-1">{preset.emoji} {preset.label}</div>
-      </div>
-
-      <div className="bg-stone-900/60 border border-stone-800 rounded-2xl px-4 py-4 text-center">
-        <div className="text-2xl mb-1">🍽️</div>
-        <div className="text-lg font-bold text-violet-400">{plan.days.length * (plan.goals.includeSnacks ? 4 : 3)}</div>
-        <div className="text-xs text-stone-400 font-medium">total meals</div>
-        <div className="text-xs text-stone-600 mt-1">{plan.goals.includeSnacks ? "with snacks" : "no snacks"}</div>
-      </div>
+      {stats.map((s) => (
+        <div key={s.label} className={`rounded-2xl border px-4 py-4 text-center ${s.color}`}>
+          <div className="text-2xl mb-1">{s.emoji}</div>
+          <div className="text-xl font-bold text-stone-800">{s.value}</div>
+          <div className="text-xs text-stone-500 font-medium mt-0.5">{s.label}</div>
+          <div className="text-xs text-stone-400 mt-0.5">{s.sub}</div>
+        </div>
+      ))}
     </div>
   );
 }

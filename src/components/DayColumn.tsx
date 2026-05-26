@@ -2,56 +2,96 @@
 import { DayPlan, NutritionGoals } from "@/lib/types";
 import { MealCard } from "./MealCard";
 import { getCaloriePresetKey, CALORIE_PRESETS } from "@/lib/utils";
+import { RefreshCw } from "lucide-react";
 
 interface Props {
   day: DayPlan;
   goals: NutritionGoals;
   isToday?: boolean;
+  onRegenerateDay?: () => void;
+  onRegenerateMeal?: (mealType: string) => void;
+  regeneratingMeal?: string | null; // "breakfast" | "lunch" | "dinner" | "snack-0"
+  isRegeneratingDay?: boolean;
 }
 
-export function DayColumn({ day, goals, isToday }: Props) {
+export function DayColumn({
+  day, goals, isToday,
+  onRegenerateDay, onRegenerateMeal,
+  regeneratingMeal, isRegeneratingDay,
+}: Props) {
   const presetKey = getCaloriePresetKey(goals.dailyCalories);
   const preset = CALORIE_PRESETS.find((p) => p.key === presetKey) ?? CALORIE_PRESETS[1];
-  const withinRange = day.totalCalories >= preset.min && day.totalCalories <= preset.max;
 
   return (
     <div className="min-w-[280px] max-w-[310px] flex flex-col gap-3">
       {/* Day header */}
       <div className={`rounded-2xl px-4 py-4 border ${
         isToday
-          ? "bg-gradient-to-br from-orange-950/60 to-stone-900 border-orange-800/60"
-          : "bg-stone-900/60 border-stone-800"
+          ? "bg-orange-50 border-orange-200"
+          : "bg-white border-stone-200"
       }`}>
-        <div className="flex items-center justify-between mb-3">
+        <div className="flex items-center justify-between mb-2">
           <div>
-            <h2 className={`font-bold text-sm ${isToday ? "text-orange-300" : "text-stone-200"}`}>
+            <h2 className={`font-bold text-sm ${isToday ? "text-orange-700" : "text-stone-800"}`}>
               {day.day}
               {isToday && (
-                <span className="ml-2 text-xs font-normal bg-orange-500/20 text-orange-400 px-2 py-0.5 rounded-full">
+                <span className="ml-2 text-xs font-normal bg-orange-100 text-orange-600 px-2 py-0.5 rounded-full">
                   today
                 </span>
               )}
             </h2>
+            <p className="text-xs text-stone-400 mt-0.5">
+              ~{Math.round(day.totalCalories / 50) * 50} kcal · target {preset.range.split(" ")[0]}
+            </p>
           </div>
-          <div className="text-right">
-            <div className={`text-lg font-bold ${withinRange ? "text-green-400" : "text-stone-300"}`}>
-              ~{Math.round(day.totalCalories / 50) * 50}
-            </div>
-            <div className="text-xs text-stone-600">kcal</div>
-          </div>
-        </div>
-        <div className="text-xs text-stone-500 bg-stone-800/50 rounded-lg px-3 py-1.5 text-center">
-          {preset.emoji} Target: {preset.range}
+          {onRegenerateDay && (
+            <button
+              onClick={onRegenerateDay}
+              disabled={isRegeneratingDay}
+              title="Regenerate this day"
+              className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-stone-100 hover:bg-orange-50 border border-stone-200 hover:border-orange-300 text-stone-500 hover:text-orange-600 text-xs font-medium transition-colors disabled:opacity-40"
+            >
+              <RefreshCw size={11} className={isRegeneratingDay ? "animate-spin" : ""} />
+              Redo day
+            </button>
+          )}
         </div>
       </div>
 
-      {/* Meals */}
-      {day.breakfast && <MealCard meal={day.breakfast} compact />}
-      {day.lunch && <MealCard meal={day.lunch} compact />}
-      {day.dinner && <MealCard meal={day.dinner} compact />}
-      {day.snacks.map((s) => (
-        <MealCard key={s.id} meal={s} compact />
+      {/* Meals — snack appears between lunch and dinner (chai time) */}
+      {day.breakfast && (
+        <MealCard
+          meal={day.breakfast}
+          compact
+          onRegenerate={onRegenerateMeal ? () => onRegenerateMeal("breakfast") : undefined}
+          isRegenerating={regeneratingMeal === "breakfast"}
+        />
+      )}
+      {day.lunch && (
+        <MealCard
+          meal={day.lunch}
+          compact
+          onRegenerate={onRegenerateMeal ? () => onRegenerateMeal("lunch") : undefined}
+          isRegenerating={regeneratingMeal === "lunch"}
+        />
+      )}
+      {day.snacks.map((s, i) => (
+        <MealCard
+          key={s.id}
+          meal={s}
+          compact
+          onRegenerate={onRegenerateMeal ? () => onRegenerateMeal(`snack-${i}`) : undefined}
+          isRegenerating={regeneratingMeal === `snack-${i}`}
+        />
       ))}
+      {day.dinner && (
+        <MealCard
+          meal={day.dinner}
+          compact
+          onRegenerate={onRegenerateMeal ? () => onRegenerateMeal("dinner") : undefined}
+          isRegenerating={regeneratingMeal === "dinner"}
+        />
+      )}
     </div>
   );
 }

@@ -3,126 +3,285 @@ import { NextRequest, NextResponse } from "next/server";
 import { Ingredient, NutritionGoals, WeekPlan, DayPlan, Meal } from "@/lib/types";
 import { DAYS, generateId, computeDayTotals } from "@/lib/utils";
 
-const INDIAN_MEAL_IDEAS = {
+// Simple, quick everyday Indian meals — not restaurant dishes
+const MEAL_IDEAS = {
   breakfast: [
-    "Masala Oats Upma", "Moong Dal Chilla", "Besan Chilla", "Aloo Paratha",
-    "Methi Thepla", "Poha with Peas & Peanuts", "Rava Upma (Semolina Upma)",
-    "Idli with Sambar", "Vegetable Dosa", "Egg Bhurji with Toast",
-    "Paneer Paratha", "Dal Cheela", "Sabudana Khichdi", "Ragi Porridge",
+    "Poha with Peas and Peanuts",
+    "Besan Chilla with Curd",
+    "Moong Dal Chilla",
+    "Aloo Paratha with Curd",
+    "Rava Upma with Coconut",
+    "Masala Oats",
+    "Egg Bhurji with Roti",
+    "Methi Thepla with Curd",
+    "Sabudana Khichdi",
+    "Ragi Porridge with Banana",
+    "Idli with Sambar",
+    "Paneer Paratha with Pickle",
+    "Banana Oats Porridge",
+    "Vegetable Dosa",
   ],
   lunch: [
-    "Dal Tadka with Roti", "Rajma Chawal", "Chana Masala with Bhatura",
-    "Palak Paneer with Roti", "Aloo Gobi Sabzi with Chapati",
-    "Chicken Curry with Rice", "Fish Curry with Rice", "Bhindi Masala with Dal & Rice",
-    "Mixed Dal Khichdi", "Methi Matar Malai with Roti", "Egg Curry with Rice",
-    "Lauki Chana Dal", "Mutton Curry with Roti", "Tofu Matar with Rice",
+    "Moong Dal + Aloo Gobi Sabzi + Roti",
+    "Toor Dal + Bhindi Masala + Rice",
+    "Masoor Dal + Palak Sabzi + Chapati",
+    "Rajma Chawal with Onion Salad",
+    "Chana Masala + Roti",
+    "Egg Curry + Rice",
+    "Chicken Curry + Roti",
+    "Toor Dal + Lauki Sabzi + Rice",
+    "Moong Dal Khichdi with Ghee",
+    "Paneer Bhurji + Roti",
+    "Fish Curry + Rice",
+    "Aloo Matar + Dal + Chapati",
+    "Mixed Veg Sabzi + Dal + Roti",
+    "Chole + Rice",
   ],
   dinner: [
-    "Dal Makhani with Tandoori Roti", "Paneer Butter Masala with Naan",
-    "Chicken Tikka Masala with Rice", "Baingan Bharta with Rotis",
-    "Egg Anda Curry with Rice", "Palak Dal with Jeera Rice",
-    "Rajma Curry with Brown Rice", "Aloo Matar with Chapati",
-    "Tarka Dal with Ghee Rice", "Fish Masala with Roti",
-    "Khichdi with Kadhi", "Mutton Rogan Josh with Roti",
-    "Mixed Vegetable Curry with Rice",
+    "Toor Dal + Aloo Sabzi + Roti",
+    "Moong Dal + Bottle Gourd Sabzi + Chapati",
+    "Egg Bhurji + Roti",
+    "Masoor Dal + Mixed Veg + Rice",
+    "Simple Khichdi with Ghee",
+    "Paneer Sabzi + Roti",
+    "Chicken + Roti",
+    "Fish + Rice",
+    "Dal + Bhindi Sabzi + Chapati",
+    "Rajma + Roti",
+    "Besan Chilla + Curd",
+    "Aloo Paratha + Curd",
+    "Dal + Lauki Sabzi + Rice",
   ],
   snack: [
-    "Roasted Makhana (Fox Nuts)", "Moong Dal Sprouts Chaat",
-    "Peanut Chikki", "Roasted Chana", "Fruit Chaat with Chaat Masala",
-    "Curd with Banana", "Besan Ladoo", "Poha Chivda",
-    "Dahi with Jaggery", "Boiled Egg with Chaat Masala",
-    "Makhana Namkeen", "Peanut-Banana Smoothie",
+    "Roasted Makhana",
+    "Roasted Chana",
+    "Banana with Peanut Butter",
+    "Curd with Fruit",
+    "Fruit Chaat",
+    "Peanuts and Jaggery",
+    "Boiled Egg",
+    "Moong Sprouts",
+    "Dates and Almonds",
+    "Poha Chivda",
   ],
 };
 
-function buildPrompt(ingredients: Ingredient[], goals: NutritionGoals, numDays: number, dayNames: string[]): string {
+function hydrateMeal(
+  raw: Record<string, unknown> | null,
+  type: string,
+  ingredients: Ingredient[]
+): Meal | null {
+  if (!raw) return null;
+  return {
+    id: generateId(),
+    name: String(raw.name ?? "Unnamed"),
+    type: type as Meal["type"],
+    description: String(raw.description ?? ""),
+    calories: Number(raw.calories ?? 0),
+    protein: Number(raw.protein ?? 0),
+    carbs: Number(raw.carbs ?? 0),
+    fat: Number(raw.fat ?? 0),
+    prepTime: Number(raw.prepTime ?? 20),
+    instructions: Array.isArray(raw.instructions) ? raw.instructions.map(String) : [],
+    ingredients: Array.isArray(raw.ingredients)
+      ? (raw.ingredients as Record<string, unknown>[]).map((i) => ({
+          ingredient: ingredients.find((x) => x.name === i.name) ?? {
+            id: generateId(),
+            name: String(i.name),
+            calories: 0,
+            protein: 0,
+            carbs: 0,
+            fat: 0,
+            unit: String(i.unit ?? "g"),
+            servingSize: 100,
+          },
+          amount: Number(i.amount ?? 0),
+        }))
+      : [],
+  };
+}
+
+function baseSystemPrompt(): string {
+  return `You are an expert in everyday Indian home cooking for busy working professionals. You know that:
+- Indians ALWAYS eat dal/curry WITH roti or rice — never a sabzi alone
+- Lunch and dinner must include: a grain (roti/chapati/rice/paratha) + a dal or sabzi
+- Meals should be quick (under 30 minutes) — everyday home cooking, NOT restaurant dishes
+- NO elaborate dishes: no Dal Makhani, no Biryani, no Kadhi, no Rogan Josh, no Butter Chicken
+- The evening snack is a light chai-time snack between lunch and dinner (4-5pm)
+- Return only valid JSON, no markdown fences`;
+}
+
+function buildFullPrompt(ingredients: Ingredient[], goals: NutritionGoals, numDays: number, dayNames: string[]): string {
   const ingredientList = ingredients
-    .map(
-      (i) =>
-        `- ${i.name}: ${i.calories} kcal, ${i.protein}g protein, ${i.carbs}g carbs, ${i.fat}g fat per ${i.servingSize}${i.unit}`
-    )
+    .map((i) => `- ${i.name}: ${i.calories}kcal, ${i.protein}g P, ${i.carbs}g C, ${i.fat}g F per ${i.servingSize}${i.unit}`)
     .join("\n");
+  const restrictions = goals.dietaryRestrictions.length > 0
+    ? `STRICT dietary restrictions: ${goals.dietaryRestrictions.join(", ")}.`
+    : "No dietary restrictions.";
 
-  const restrictions =
-    goals.dietaryRestrictions.length > 0
-      ? `Dietary restrictions (STRICTLY follow): ${goals.dietaryRestrictions.join(", ")}.`
-      : "No dietary restrictions.";
+  return `Create a ${numDays}-day Indian meal plan for a busy professional using ONLY these ingredients:
 
-  return `You are an expert Indian nutritionist and home chef. Create an authentic, varied 7-day Indian meal plan using ONLY the ingredients listed below.
-
-AVAILABLE INGREDIENTS:
 ${ingredientList}
 
-IMPORTANT: You may freely use common Indian spices and condiments in your recipes (turmeric, cumin, coriander, mustard seeds, garam masala, chilli powder, asafoetida/hing, curry leaves, ginger, garlic, salt, oil) even if not listed — these are pantry staples. Do NOT use any other unlisted ingredient as a main component.
+You may add: turmeric, cumin, coriander, mustard seeds, garam masala, chilli powder, hing, curry leaves, ginger, garlic, salt, oil — these are always available.
 
-DAILY NUTRITION TARGETS:
-- Calories: ${goals.dailyCalories} kcal
-- Protein: ${goals.proteinGrams}g
-- Carbs: ${goals.carbsGrams}g
-- Fat: ${goals.fatGrams}g
-- ${restrictions}
-${goals.includeSnacks ? "- Include 1 snack per day" : "- No snacks needed"}
+CALORIE TARGET: ~${goals.dailyCalories} kcal/day | ${restrictions}
+${goals.includeSnacks ? "Include 1 evening snack per day (light, 4-5pm)." : "No snacks."}
 
-MEAL INSPIRATION: ${INDIAN_MEAL_IDEAS.breakfast.slice(0, 4).join(", ")} / ${INDIAN_MEAL_IDEAS.lunch.slice(0, 4).join(", ")} / ${INDIAN_MEAL_IDEAS.dinner.slice(0, 4).join(", ")}${goals.includeSnacks ? ` / ${INDIAN_MEAL_IDEAS.snack.slice(0, 3).join(", ")}` : ""}
+MEAL STRUCTURE (critical):
+- Breakfast: a filling Indian breakfast dish (poha, paratha, chilla, upma, idli, dosa, oats, etc.)
+- Lunch: MUST = grain (roti/rice) + dal/curry + sabzi. Name it fully e.g. "Moong Dal + Aloo Gobi + Roti"
+- Dinner: MUST = grain + dal/sabzi. Lighter than lunch.
+- Each day must be different. Vary proteins (dal, egg, paneer, chicken, fish) across days.
 
-Generate exactly ${numDays} day${numDays > 1 ? "s" : ""}: ${dayNames.join(", ")}.
+INSPIRATION: ${MEAL_IDEAS.breakfast.slice(0, 5).join(" | ")} / ${MEAL_IDEAS.lunch.slice(0, 5).join(" | ")} / ${MEAL_IDEAS.dinner.slice(0, 4).join(" | ")}
 
-Return a JSON object (raw JSON only, no markdown):
-{"days":[{"day":"Monday","breakfast":{"name":"...","description":"...","calories":0,"protein":0,"carbs":0,"fat":0,"prepTime":0,"instructions":["step1","step2"],"ingredients":[{"name":"...","amount":0,"unit":"g"}]},"lunch":{...},"dinner":{...},"snacks":[]}]}
+Days to generate: ${dayNames.join(", ")}
 
-Rules:
-1. All meal names must be authentic Indian dish names (Hindi/regional names preferred)
-2. No two days should repeat the same meal
-3. Vary regional cuisines across the week: North Indian, South Indian, Maharashtrian, Bengali, Gujarati
-4. Keep daily nutrition totals close to targets (within 10%)
-5. Instructions should reflect real Indian cooking (tadka, tempering, rolling rotis, etc.) — 2-3 steps max, keep each step brief
-6. All numeric values must be realistic positive integers
-7. Include exactly ${numDays} day${numDays > 1 ? "s" : ""}: ${dayNames.join(", ")}
-8. Ingredient names in the ingredients array must match the available ingredients list exactly
-${goals.includeSnacks ? "9. Include exactly 1 snack per day" : "9. Set snacks to empty array []"}
-10. Descriptions should be appetizing and mention key flavours (spicy, tangy, creamy, smoky, etc.)`;
+JSON format:
+{"days":[{"day":"Monday","breakfast":{"name":"Poha with Peas","description":"Light fluffy poha with crunchy peanuts and a squeeze of lemon","calories":350,"protein":10,"carbs":58,"fat":8,"prepTime":15,"instructions":["Rinse poha, heat oil and add mustard seeds and curry leaves","Add onion, peas and peanuts, stir in poha with turmeric and salt","Garnish with coriander and lemon juice"],"ingredients":[{"name":"Poha (Flattened Rice)","amount":80,"unit":"g"}]},"lunch":{...},"dinner":{...},"snacks":[]}]}`;
+}
+
+function buildMealPrompt(
+  ingredients: Ingredient[],
+  goals: NutritionGoals,
+  dayName: string,
+  mealType: string,
+  existingMeals: string[]
+): string {
+  const ingredientList = ingredients
+    .map((i) => `- ${i.name}: ${i.calories}kcal per ${i.servingSize}${i.unit}`)
+    .join("\n");
+  const restrictions = goals.dietaryRestrictions.length > 0
+    ? `Restrictions: ${goals.dietaryRestrictions.join(", ")}.`
+    : "";
+  const avoidList = existingMeals.length > 0
+    ? `Already on this day: ${existingMeals.join(", ")} — make something different.`
+    : "";
+
+  const mealGuidance = (mealType === "lunch" || mealType === "dinner")
+    ? "MUST include a grain (roti/rice) + dal or sabzi. Name it fully."
+    : mealType === "breakfast"
+    ? "A quick filling Indian breakfast (poha, paratha, chilla, upma, idli, etc.)"
+    : "A light evening snack (makhana, chana, fruit, curd, etc.) — under 200 kcal";
+
+  return `Generate ONE ${mealType} for ${dayName}. ${avoidList}
+Available ingredients: ${ingredientList}
+Calorie target for this meal: ~${Math.round(goals.dailyCalories / (goals.includeSnacks ? 4 : 3))} kcal
+${restrictions}
+${mealGuidance}
+
+Return JSON: {"meal":{"name":"...","description":"...","calories":0,"protein":0,"carbs":0,"fat":0,"prepTime":0,"instructions":["step1","step2"],"ingredients":[{"name":"...","amount":0,"unit":"g"}]}}`;
+}
+
+function buildDayPrompt(
+  ingredients: Ingredient[],
+  goals: NutritionGoals,
+  dayName: string,
+  otherDayMeals: string[]
+): string {
+  const ingredientList = ingredients
+    .map((i) => `- ${i.name}: ${i.calories}kcal per ${i.servingSize}${i.unit}`)
+    .join("\n");
+  const restrictions = goals.dietaryRestrictions.length > 0
+    ? `Restrictions: ${goals.dietaryRestrictions.join(", ")}.`
+    : "";
+  const avoidList = otherDayMeals.length > 0
+    ? `Already planned on other days: ${otherDayMeals.join("; ")} — make this day different.`
+    : "";
+
+  return `Generate ONE full day (${dayName}) of meals for a busy professional.
+${avoidList}
+Available ingredients: ${ingredientList}
+Calorie target: ~${goals.dailyCalories} kcal/day | ${restrictions}
+${goals.includeSnacks ? "Include 1 evening snack." : "No snacks."}
+Lunch and dinner MUST include grain (roti/rice) + dal/sabzi.
+
+Return JSON: {"day":{"day":"${dayName}","breakfast":{...},"lunch":{...},"dinner":{...},"snacks":[]}}`;
 }
 
 export async function POST(req: NextRequest) {
   try {
-    const { ingredients, goals, duration = "7" }: {
-      ingredients: Ingredient[];
-      goals: NutritionGoals;
-      duration?: string;
-    } = await req.json();
+    const body = await req.json();
+    const { ingredients, goals } = body as { ingredients: Ingredient[]; goals: NutritionGoals };
 
-    const numDays = Math.min(7, Math.max(1, parseInt(duration) || 7));
-    const dayNames = DAYS.slice(0, numDays);
-
-    if (!ingredients || ingredients.length === 0) {
+    if (!ingredients || ingredients.length === 0)
       return NextResponse.json({ error: "No ingredients provided" }, { status: 400 });
-    }
-
-    if (!process.env.GROQ_API_KEY) {
+    if (!process.env.GROQ_API_KEY)
       return NextResponse.json({ error: "GROQ_API_KEY not configured" }, { status: 500 });
-    }
 
     const client = new Groq({ apiKey: process.env.GROQ_API_KEY });
+    const mode: string = body.mode ?? "full";
+
+    // ── Single meal regeneration ──────────────────────────────────
+    if (mode === "meal") {
+      const { dayName, mealType, existingMeals = [] } = body as {
+        dayName: string;
+        mealType: string;
+        existingMeals: string[];
+      };
+      const completion = await client.chat.completions.create({
+        model: "llama-3.3-70b-versatile",
+        max_tokens: 1500,
+        response_format: { type: "json_object" },
+        messages: [
+          { role: "system", content: baseSystemPrompt() },
+          { role: "user", content: buildMealPrompt(ingredients, goals, dayName, mealType, existingMeals) },
+        ],
+      });
+      const raw = JSON.parse(completion.choices[0]?.message?.content ?? "{}");
+      const meal = hydrateMeal(raw.meal as Record<string, unknown>, mealType, ingredients);
+      if (!meal) throw new Error("Failed to generate meal");
+      return NextResponse.json({ meal });
+    }
+
+    // ── Single day regeneration ───────────────────────────────────
+    if (mode === "day") {
+      const { dayName, otherDayMeals = [] } = body as {
+        dayName: string;
+        otherDayMeals: string[];
+      };
+      const completion = await client.chat.completions.create({
+        model: "llama-3.3-70b-versatile",
+        max_tokens: 2500,
+        response_format: { type: "json_object" },
+        messages: [
+          { role: "system", content: baseSystemPrompt() },
+          { role: "user", content: buildDayPrompt(ingredients, goals, dayName, otherDayMeals) },
+        ],
+      });
+      const raw = JSON.parse(completion.choices[0]?.message?.content ?? "{}");
+      const d = raw.day as Record<string, unknown>;
+      if (!d) throw new Error("Failed to generate day");
+      const rawSnacks = Array.isArray(d.snacks) ? (d.snacks as Record<string, unknown>[]) : [];
+      const dayPlan: DayPlan = computeDayTotals({
+        day: String(d.day ?? dayName),
+        date: "",
+        breakfast: hydrateMeal(d.breakfast as Record<string, unknown> | null, "breakfast", ingredients),
+        lunch: hydrateMeal(d.lunch as Record<string, unknown> | null, "lunch", ingredients),
+        dinner: hydrateMeal(d.dinner as Record<string, unknown> | null, "dinner", ingredients),
+        snacks: rawSnacks.map((s) => hydrateMeal(s, "snack", ingredients) as Meal).filter(Boolean),
+        totalCalories: 0, totalProtein: 0, totalCarbs: 0, totalFat: 0,
+      });
+      return NextResponse.json({ day: dayPlan });
+    }
+
+    // ── Full plan generation ──────────────────────────────────────
+    const duration: string = body.duration ?? "7";
+    const numDays = Math.min(7, Math.max(1, parseInt(duration) || 7));
+    const dayNames = DAYS.slice(0, numDays);
 
     const completion = await client.chat.completions.create({
       model: "llama-3.3-70b-versatile",
       max_tokens: 8000,
       response_format: { type: "json_object" },
       messages: [
-        {
-          role: "system",
-          content:
-            "You are an expert Indian nutritionist and chef AI. You deeply understand Indian cuisine — dals, sabzis, rotis, rice dishes, regional variations. You return only valid JSON meal plans with authentic Indian meal names and cooking instructions. Never include markdown code fences or explanations — return raw JSON only.",
-        },
-        {
-          role: "user",
-          content: buildPrompt(ingredients, goals, numDays, dayNames),
-        },
+        { role: "system", content: baseSystemPrompt() },
+        { role: "user", content: buildFullPrompt(ingredients, goals, numDays, dayNames) },
       ],
     });
 
     const rawText = completion.choices[0]?.message?.content ?? "";
-
     let parsed: { days: unknown[] };
     try {
       parsed = JSON.parse(rawText);
@@ -132,56 +291,18 @@ export async function POST(req: NextRequest) {
       parsed = JSON.parse(jsonMatch[0]);
     }
 
-    // Hydrate full Meal objects with generated IDs
     const dayPlans: DayPlan[] = (parsed.days as Record<string, unknown>[]).map(
       (d: Record<string, unknown>, idx: number) => {
-        const hydrateMeal = (raw: Record<string, unknown> | null, type: string): Meal | null => {
-          if (!raw) return null;
-          return {
-            id: generateId(),
-            name: String(raw.name ?? "Unnamed"),
-            type: type as Meal["type"],
-            description: String(raw.description ?? ""),
-            calories: Number(raw.calories ?? 0),
-            protein: Number(raw.protein ?? 0),
-            carbs: Number(raw.carbs ?? 0),
-            fat: Number(raw.fat ?? 0),
-            prepTime: Number(raw.prepTime ?? 15),
-            instructions: Array.isArray(raw.instructions)
-              ? raw.instructions.map(String)
-              : [],
-            ingredients: Array.isArray(raw.ingredients)
-              ? (raw.ingredients as Record<string, unknown>[]).map((i) => ({
-                  ingredient: ingredients.find((x) => x.name === i.name) ?? {
-                    id: generateId(),
-                    name: String(i.name),
-                    calories: 0,
-                    protein: 0,
-                    carbs: 0,
-                    fat: 0,
-                    unit: String(i.unit ?? "g"),
-                    servingSize: 100,
-                  },
-                  amount: Number(i.amount ?? 0),
-                }))
-              : [],
-          };
-        };
-
         const rawSnacks = Array.isArray(d.snacks) ? (d.snacks as Record<string, unknown>[]) : [];
-        const base: DayPlan = {
+        return computeDayTotals({
           day: DAYS[idx] ?? String(d.day),
           date: "",
-          breakfast: hydrateMeal(d.breakfast as Record<string, unknown> | null, "breakfast"),
-          lunch: hydrateMeal(d.lunch as Record<string, unknown> | null, "lunch"),
-          dinner: hydrateMeal(d.dinner as Record<string, unknown> | null, "dinner"),
-          snacks: rawSnacks.map((s) => hydrateMeal(s, "snack") as Meal).filter(Boolean),
-          totalCalories: 0,
-          totalProtein: 0,
-          totalCarbs: 0,
-          totalFat: 0,
-        };
-        return computeDayTotals(base);
+          breakfast: hydrateMeal(d.breakfast as Record<string, unknown> | null, "breakfast", ingredients),
+          lunch: hydrateMeal(d.lunch as Record<string, unknown> | null, "lunch", ingredients),
+          dinner: hydrateMeal(d.dinner as Record<string, unknown> | null, "dinner", ingredients),
+          snacks: rawSnacks.map((s) => hydrateMeal(s, "snack", ingredients) as Meal).filter(Boolean),
+          totalCalories: 0, totalProtein: 0, totalCarbs: 0, totalFat: 0,
+        });
       }
     );
 

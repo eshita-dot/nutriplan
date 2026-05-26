@@ -10,26 +10,13 @@ interface Props {
   onRemove: (id: string) => void;
 }
 
-const EMPTY: Omit<Ingredient, "id"> = {
-  name: "",
-  calories: 0,
-  protein: 0,
-  carbs: 0,
-  fat: 0,
-  servingSize: 100,
-  unit: "g",
-};
+const EMPTY: Omit<Ingredient, "id"> = { name: "", calories: 0, protein: 0, carbs: 0, fat: 0, servingSize: 100, unit: "g" };
 
-interface IngredientGroup {
-  label: string;
-  emoji: string;
-  items: Omit<Ingredient, "id">[];
-}
+interface IngredientGroup { label: string; emoji: string; items: Omit<Ingredient, "id">[]; }
 
 const QUICK_ADD_GROUPS: IngredientGroup[] = [
   {
-    label: "Grains & Staples",
-    emoji: "🌾",
+    label: "Grains & Staples", emoji: "🌾",
     items: [
       { name: "Whole Wheat Flour (Atta)", calories: 340, protein: 13, carbs: 71, fat: 2.5, servingSize: 100, unit: "g" },
       { name: "Basmati Rice", calories: 350, protein: 7, carbs: 78, fat: 0.6, servingSize: 100, unit: "g" },
@@ -42,12 +29,10 @@ const QUICK_ADD_GROUPS: IngredientGroup[] = [
       { name: "Idli Rice (Parboiled)", calories: 349, protein: 7, carbs: 78, fat: 0.5, servingSize: 100, unit: "g" },
       { name: "Rice Flour", calories: 366, protein: 6, carbs: 80, fat: 0.5, servingSize: 100, unit: "g" },
       { name: "Bread (Whole Wheat)", calories: 247, protein: 13, carbs: 41, fat: 4, servingSize: 100, unit: "g" },
-      { name: "Suji (Coarse Semolina)", calories: 360, protein: 12, carbs: 73, fat: 1, servingSize: 100, unit: "g" },
     ],
   },
   {
-    label: "Millets",
-    emoji: "🌱",
+    label: "Millets", emoji: "🌱",
     items: [
       { name: "Jowar (Sorghum)", calories: 349, protein: 11, carbs: 73, fat: 2, servingSize: 100, unit: "g" },
       { name: "Bajra (Pearl Millet)", calories: 361, protein: 11, carbs: 67, fat: 5, servingSize: 100, unit: "g" },
@@ -59,8 +44,7 @@ const QUICK_ADD_GROUPS: IngredientGroup[] = [
     ],
   },
   {
-    label: "Dals & Legumes",
-    emoji: "🫘",
+    label: "Dals & Legumes", emoji: "🫘",
     items: [
       { name: "Toor Dal (Arhar)", calories: 343, protein: 22, carbs: 63, fat: 1.5, servingSize: 100, unit: "g" },
       { name: "Moong Dal (Yellow)", calories: 347, protein: 24, carbs: 63, fat: 1.2, servingSize: 100, unit: "g" },
@@ -73,12 +57,10 @@ const QUICK_ADD_GROUPS: IngredientGroup[] = [
       { name: "Lobia (Black-eyed Peas)", calories: 336, protein: 24, carbs: 60, fat: 1.3, servingSize: 100, unit: "g" },
       { name: "Matki (Moth Beans)", calories: 343, protein: 23, carbs: 62, fat: 1.6, servingSize: 100, unit: "g" },
       { name: "Soy Chunks (Nutrela)", calories: 345, protein: 52, carbs: 33, fat: 0.5, servingSize: 100, unit: "g" },
-      { name: "Chhole (Canned Chickpeas)", calories: 164, protein: 9, carbs: 27, fat: 2.6, servingSize: 100, unit: "g" },
     ],
   },
   {
-    label: "Vegetables",
-    emoji: "🥬",
+    label: "Vegetables", emoji: "🥬",
     items: [
       { name: "Potato (Aloo)", calories: 77, protein: 2, carbs: 17, fat: 0.1, servingSize: 100, unit: "g" },
       { name: "Sweet Potato (Shakarkand)", calories: 86, protein: 1.6, carbs: 20, fat: 0.1, servingSize: 100, unit: "g" },
@@ -94,8 +76,8 @@ const QUICK_ADD_GROUPS: IngredientGroup[] = [
       { name: "Capsicum (Shimla Mirch)", calories: 31, protein: 1, carbs: 6, fat: 0.3, servingSize: 100, unit: "g" },
       { name: "Bitter Gourd (Karela)", calories: 17, protein: 1, carbs: 3.7, fat: 0.2, servingSize: 100, unit: "g" },
       { name: "Carrot (Gajar)", calories: 41, protein: 0.9, carbs: 10, fat: 0.2, servingSize: 100, unit: "g" },
-      { name: "Beetroot (Chukandar)", calories: 43, protein: 1.6, carbs: 10, fat: 0.2, servingSize: 100, unit: "g" },
-      { name: "Drumstick (Sahjan/Moringa)", calories: 37, protein: 2.1, carbs: 8.5, fat: 0.2, servingSize: 100, unit: "g" },
+      { name: "Beetroot", calories: 43, protein: 1.6, carbs: 10, fat: 0.2, servingSize: 100, unit: "g" },
+      { name: "Drumstick (Sahjan)", calories: 37, protein: 2.1, carbs: 8.5, fat: 0.2, servingSize: 100, unit: "g" },
       { name: "Pumpkin (Kaddu)", calories: 26, protein: 1, carbs: 6.5, fat: 0.1, servingSize: 100, unit: "g" },
       { name: "Radish (Mooli)", calories: 16, protein: 0.7, carbs: 3.4, fat: 0.1, servingSize: 100, unit: "g" },
       { name: "French Beans", calories: 31, protein: 1.8, carbs: 7, fat: 0.1, servingSize: 100, unit: "g" },
@@ -105,8 +87,7 @@ const QUICK_ADD_GROUPS: IngredientGroup[] = [
     ],
   },
   {
-    label: "Dairy & Fats",
-    emoji: "🥛",
+    label: "Dairy & Fats", emoji: "🥛",
     items: [
       { name: "Paneer", calories: 265, protein: 18, carbs: 1.2, fat: 21, servingSize: 100, unit: "g" },
       { name: "Curd (Dahi)", calories: 61, protein: 3.5, carbs: 4.7, fat: 3.3, servingSize: 100, unit: "g" },
@@ -115,16 +96,14 @@ const QUICK_ADD_GROUPS: IngredientGroup[] = [
       { name: "Ghee", calories: 900, protein: 0, carbs: 0, fat: 100, servingSize: 100, unit: "g" },
       { name: "Butter", calories: 717, protein: 0.9, carbs: 0.1, fat: 81, servingSize: 100, unit: "g" },
       { name: "Coconut Oil", calories: 862, protein: 0, carbs: 0, fat: 100, servingSize: 100, unit: "g" },
-      { name: "Mustard Oil", calories: 884, protein: 0, carbs: 0, fat: 100, servingSize: 100, unit: "g" },
       { name: "Coconut (Desiccated)", calories: 354, protein: 3.3, carbs: 15, fat: 33, servingSize: 100, unit: "g" },
       { name: "Coconut Milk", calories: 230, protein: 2.3, carbs: 6, fat: 24, servingSize: 100, unit: "ml" },
-      { name: "Khoa (Mawa)", calories: 421, protein: 20, carbs: 26, fat: 26, servingSize: 100, unit: "g" },
       { name: "Cream (Malai)", calories: 340, protein: 2.8, carbs: 4, fat: 36, servingSize: 100, unit: "g" },
+      { name: "Khoa (Mawa)", calories: 421, protein: 20, carbs: 26, fat: 26, servingSize: 100, unit: "g" },
     ],
   },
   {
-    label: "Proteins",
-    emoji: "🍗",
+    label: "Proteins", emoji: "🍗",
     items: [
       { name: "Eggs", calories: 155, protein: 13, carbs: 1.1, fat: 11, servingSize: 100, unit: "g" },
       { name: "Chicken (Boneless)", calories: 165, protein: 31, carbs: 0, fat: 3.6, servingSize: 100, unit: "g" },
@@ -134,12 +113,10 @@ const QUICK_ADD_GROUPS: IngredientGroup[] = [
       { name: "Prawns/Shrimp", calories: 99, protein: 24, carbs: 0.2, fat: 0.3, servingSize: 100, unit: "g" },
       { name: "Mutton (Goat)", calories: 294, protein: 17, carbs: 0, fat: 25, servingSize: 100, unit: "g" },
       { name: "Tofu", calories: 76, protein: 8, carbs: 1.9, fat: 4.8, servingSize: 100, unit: "g" },
-      { name: "Paneer (low-fat)", calories: 199, protein: 19, carbs: 3, fat: 13, servingSize: 100, unit: "g" },
     ],
   },
   {
-    label: "Fruits, Nuts & Seeds",
-    emoji: "🍎",
+    label: "Fruits, Nuts & Seeds", emoji: "🍎",
     items: [
       { name: "Banana", calories: 89, protein: 1.1, carbs: 23, fat: 0.3, servingSize: 100, unit: "g" },
       { name: "Mango", calories: 60, protein: 0.8, carbs: 15, fat: 0.4, servingSize: 100, unit: "g" },
@@ -147,18 +124,14 @@ const QUICK_ADD_GROUPS: IngredientGroup[] = [
       { name: "Papaya", calories: 43, protein: 0.5, carbs: 11, fat: 0.3, servingSize: 100, unit: "g" },
       { name: "Guava (Amrood)", calories: 68, protein: 2.6, carbs: 14, fat: 1, servingSize: 100, unit: "g" },
       { name: "Pomegranate (Anar)", calories: 83, protein: 1.7, carbs: 19, fat: 1.2, servingSize: 100, unit: "g" },
-      { name: "Orange (Santra)", calories: 47, protein: 0.9, carbs: 12, fat: 0.1, servingSize: 100, unit: "g" },
-      { name: "Watermelon (Tarbooz)", calories: 30, protein: 0.6, carbs: 8, fat: 0.2, servingSize: 100, unit: "g" },
       { name: "Dates (Khajoor)", calories: 282, protein: 2.5, carbs: 75, fat: 0.4, servingSize: 100, unit: "g" },
       { name: "Peanuts (Moongphali)", calories: 567, protein: 26, carbs: 16, fat: 49, servingSize: 100, unit: "g" },
       { name: "Almonds (Badam)", calories: 579, protein: 21, carbs: 22, fat: 50, servingSize: 100, unit: "g" },
       { name: "Cashews (Kaju)", calories: 553, protein: 18, carbs: 30, fat: 44, servingSize: 100, unit: "g" },
       { name: "Walnuts (Akhrot)", calories: 654, protein: 15, carbs: 14, fat: 65, servingSize: 100, unit: "g" },
-      { name: "Pistachios (Pista)", calories: 562, protein: 20, carbs: 28, fat: 46, servingSize: 100, unit: "g" },
       { name: "Makhana (Fox Nuts)", calories: 347, protein: 9.7, carbs: 77, fat: 0.1, servingSize: 100, unit: "g" },
       { name: "Flaxseeds (Alsi)", calories: 534, protein: 18, carbs: 29, fat: 42, servingSize: 100, unit: "g" },
       { name: "Sesame Seeds (Til)", calories: 573, protein: 17, carbs: 23, fat: 50, servingSize: 100, unit: "g" },
-      { name: "Sunflower Seeds", calories: 584, protein: 21, carbs: 20, fat: 51, servingSize: 100, unit: "g" },
       { name: "Chia Seeds", calories: 486, protein: 17, carbs: 42, fat: 31, servingSize: 100, unit: "g" },
     ],
   },
@@ -178,9 +151,14 @@ export function IngredientsPanel({ ingredients, onAdd, onRemove }: Props) {
     setShowForm(false);
   };
 
-  const quickAdd = (item: Omit<Ingredient, "id">) => {
-    if (ingredients.find((i) => i.name === item.name)) return;
-    onAdd(item);
+  // Toggle: add if not present, remove if present
+  const quickToggle = (item: Omit<Ingredient, "id">) => {
+    const existing = ingredients.find((i) => i.name === item.name);
+    if (existing) {
+      onRemove(existing.id);
+    } else {
+      onAdd(item);
+    }
   };
 
   const addGroup = (group: IngredientGroup) => {
@@ -190,7 +168,6 @@ export function IngredientsPanel({ ingredients, onAdd, onRemove }: Props) {
   };
 
   const currentGroup = QUICK_ADD_GROUPS.find((g) => g.label === activeGroup) ?? QUICK_ADD_GROUPS[0];
-
   const filteredItems = search.trim()
     ? QUICK_ADD_GROUPS.flatMap((g) => g.items).filter((item) =>
         item.name.toLowerCase().includes(search.toLowerCase())
@@ -199,45 +176,45 @@ export function IngredientsPanel({ ingredients, onAdd, onRemove }: Props) {
 
   const field = (key: keyof typeof EMPTY, label: string, type = "text") => (
     <div>
-      <label className="block text-xs text-stone-400 mb-1">{label}</label>
+      <label className="block text-xs text-stone-500 mb-1 font-medium">{label}</label>
       <input
         type={type}
         value={form[key] as string | number}
         onChange={(e) =>
           setForm({ ...form, [key]: type === "number" ? parseFloat(e.target.value) || 0 : e.target.value })
         }
-        className="w-full bg-stone-800 border border-stone-700 rounded-xl px-3 py-1.5 text-sm text-white focus:outline-none focus:border-orange-500 transition-colors"
+        className="w-full bg-stone-50 border border-stone-200 rounded-xl px-3 py-1.5 text-sm text-stone-800 focus:outline-none focus:border-orange-400 transition-colors"
       />
     </div>
   );
 
   return (
     <div className="space-y-4">
-      {/* Quick Add Panel */}
-      <div className="bg-stone-900/80 rounded-2xl border border-stone-800 overflow-hidden">
+      {/* Quick Add */}
+      <div className="bg-white rounded-2xl border border-stone-200 overflow-hidden shadow-sm">
         <button
           onClick={() => setShowQuick(!showQuick)}
-          className="w-full flex items-center justify-between px-5 py-4 text-sm font-semibold text-stone-200 hover:bg-stone-800/50 transition-colors"
+          className="w-full flex items-center justify-between px-5 py-4 text-sm font-bold text-stone-700 hover:bg-stone-50 transition-colors"
         >
           <span>🧺 Quick-add from pantry</span>
-          {showQuick ? <ChevronUp size={16} className="text-stone-500" /> : <ChevronDown size={16} className="text-stone-500" />}
+          {showQuick ? <ChevronUp size={16} className="text-stone-400" /> : <ChevronDown size={16} className="text-stone-400" />}
         </button>
 
         {showQuick && (
-          <div className="px-5 pb-5 space-y-4 border-t border-stone-800">
+          <div className="px-5 pb-5 space-y-4 border-t border-stone-100">
             {/* Search */}
             <div className="relative mt-4">
-              <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-stone-500" />
+              <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-stone-400" />
               <input
                 type="text"
                 placeholder="Search ingredients..."
                 value={search}
                 onChange={(e) => setSearch(e.target.value)}
-                className="w-full bg-stone-800 border border-stone-700 rounded-xl pl-9 pr-4 py-2 text-sm text-stone-200 placeholder-stone-600 focus:outline-none focus:border-orange-500 transition-colors"
+                className="w-full bg-stone-50 border border-stone-200 rounded-xl pl-9 pr-4 py-2 text-sm text-stone-700 placeholder-stone-400 focus:outline-none focus:border-orange-400 transition-colors"
               />
             </div>
 
-            {/* Category tabs — hidden during search */}
+            {/* Category tabs */}
             {!search && (
               <div className="flex gap-2 flex-wrap">
                 {QUICK_ADD_GROUPS.map((g) => (
@@ -245,10 +222,10 @@ export function IngredientsPanel({ ingredients, onAdd, onRemove }: Props) {
                     key={g.label}
                     onClick={() => setActiveGroup(g.label)}
                     className={cn(
-                      "px-3 py-1.5 rounded-full text-xs font-medium transition-all",
+                      "px-3 py-1.5 rounded-full text-xs font-semibold transition-all border",
                       activeGroup === g.label
-                        ? "bg-orange-500 text-white"
-                        : "bg-stone-800 text-stone-400 hover:text-stone-200 hover:bg-stone-700"
+                        ? "bg-orange-500 text-white border-orange-500"
+                        : "bg-white text-stone-600 border-stone-200 hover:border-orange-300 hover:text-orange-600"
                     )}
                   >
                     {g.emoji} {g.label}
@@ -257,35 +234,35 @@ export function IngredientsPanel({ ingredients, onAdd, onRemove }: Props) {
               </div>
             )}
 
-            {/* Items */}
+            {/* Items — click to toggle add/remove */}
             <div className="flex flex-wrap gap-2">
               {filteredItems.map((item) => {
                 const added = ingredients.some((i) => i.name === item.name);
                 return (
                   <button
                     key={item.name}
-                    onClick={() => quickAdd(item)}
-                    disabled={added}
+                    onClick={() => quickToggle(item)}
                     className={cn(
                       "px-3 py-1.5 rounded-full text-xs font-medium border transition-all",
                       added
-                        ? "border-orange-600/60 bg-orange-950/40 text-orange-400 cursor-default"
-                        : "border-stone-700 bg-stone-800 text-stone-300 hover:border-orange-500/60 hover:text-orange-300 hover:bg-orange-950/30"
+                        ? "border-orange-400 bg-orange-50 text-orange-700 hover:bg-red-50 hover:border-red-300 hover:text-red-600"
+                        : "border-stone-200 bg-white text-stone-600 hover:border-orange-300 hover:bg-orange-50 hover:text-orange-700"
                     )}
+                    title={added ? "Click to remove" : "Click to add"}
                   >
-                    {added ? "✓ " : ""}{item.name}
+                    {added ? "✓ " : "+ "}{item.name}
                   </button>
                 );
               })}
               {filteredItems.length === 0 && (
-                <p className="text-xs text-stone-600 py-2">No ingredients match your search.</p>
+                <p className="text-xs text-stone-400 py-2">No ingredients match.</p>
               )}
             </div>
 
             {!search && (
               <button
                 onClick={() => addGroup(currentGroup)}
-                className="text-xs text-orange-500 hover:text-orange-400 transition-colors font-medium"
+                className="text-xs text-orange-500 hover:text-orange-600 font-semibold transition-colors"
               >
                 + Add all {currentGroup.label.toLowerCase()}
               </button>
@@ -295,33 +272,33 @@ export function IngredientsPanel({ ingredients, onAdd, onRemove }: Props) {
       </div>
 
       {/* Custom ingredient */}
-      <div className="bg-stone-900/80 rounded-2xl border border-stone-800 overflow-hidden">
+      <div className="bg-white rounded-2xl border border-stone-200 overflow-hidden shadow-sm">
         <button
           onClick={() => setShowForm(!showForm)}
-          className="w-full flex items-center justify-between px-5 py-4 text-sm font-semibold text-stone-200 hover:bg-stone-800/50 transition-colors"
+          className="w-full flex items-center justify-between px-5 py-4 text-sm font-bold text-stone-700 hover:bg-stone-50 transition-colors"
         >
           <span className="flex items-center gap-2">
-            <Plus size={16} className="text-orange-500" /> Add custom ingredient
+            <Plus size={15} className="text-orange-500" /> Add custom ingredient
           </span>
-          {showForm ? <ChevronUp size={16} className="text-stone-500" /> : <ChevronDown size={16} className="text-stone-500" />}
+          {showForm ? <ChevronUp size={16} className="text-stone-400" /> : <ChevronDown size={16} className="text-stone-400" />}
         </button>
         {showForm && (
-          <div className="px-5 pb-5 space-y-3 border-t border-stone-800 pt-4">
+          <div className="px-5 pb-5 space-y-3 border-t border-stone-100 pt-4">
             <div className="grid grid-cols-2 gap-3">
               <div className="col-span-2">{field("name", "Food name")}</div>
               <div>
-                <label className="block text-xs text-stone-400 mb-1">Serving size</label>
+                <label className="block text-xs text-stone-500 mb-1 font-medium">Serving size</label>
                 <div className="flex gap-2">
                   <input
                     type="number"
                     value={form.servingSize}
                     onChange={(e) => setForm({ ...form, servingSize: parseFloat(e.target.value) || 0 })}
-                    className="w-full bg-stone-800 border border-stone-700 rounded-xl px-3 py-1.5 text-sm text-white focus:outline-none focus:border-orange-500"
+                    className="w-full bg-stone-50 border border-stone-200 rounded-xl px-3 py-1.5 text-sm text-stone-800 focus:outline-none focus:border-orange-400"
                   />
                   <select
                     value={form.unit}
                     onChange={(e) => setForm({ ...form, unit: e.target.value })}
-                    className="bg-stone-800 border border-stone-700 rounded-xl px-2 text-sm text-white focus:outline-none focus:border-orange-500"
+                    className="bg-stone-50 border border-stone-200 rounded-xl px-2 text-sm text-stone-800 focus:outline-none focus:border-orange-400"
                   >
                     <option>g</option><option>ml</option><option>oz</option><option>cup</option><option>piece</option>
                   </select>
@@ -335,7 +312,7 @@ export function IngredientsPanel({ ingredients, onAdd, onRemove }: Props) {
             <button
               onClick={add}
               disabled={!form.name.trim()}
-              className="w-full bg-orange-500 hover:bg-orange-400 disabled:opacity-40 disabled:cursor-not-allowed text-white rounded-xl py-2.5 text-sm font-semibold transition-colors"
+              className="w-full bg-orange-500 hover:bg-orange-400 disabled:opacity-40 disabled:cursor-not-allowed text-white rounded-xl py-2.5 text-sm font-bold transition-colors"
             >
               Add to pantry
             </button>
@@ -346,31 +323,28 @@ export function IngredientsPanel({ ingredients, onAdd, onRemove }: Props) {
       {/* Pantry list */}
       {ingredients.length > 0 && (
         <div className="space-y-2">
-          <p className="text-xs text-stone-500 uppercase tracking-wider font-semibold px-1">
+          <p className="text-xs text-stone-400 uppercase tracking-wider font-bold px-1">
             Your pantry — {ingredients.length} item{ingredients.length !== 1 ? "s" : ""}
           </p>
-          <div className="grid grid-cols-1 gap-2">
-            {ingredients.map((ing) => (
-              <div
-                key={ing.id}
-                className="flex items-center justify-between bg-stone-900/60 border border-stone-800 rounded-xl px-4 py-3 group hover:border-stone-700 transition-colors"
-              >
-                <div>
-                  <p className="text-sm font-medium text-stone-100">{ing.name}</p>
-                  <p className="text-xs text-stone-500 mt-0.5">
-                    {ing.calories} kcal · {ing.protein}g P · {ing.carbs}g C · {ing.fat}g F
-                    {" "}per {ing.servingSize}{ing.unit}
-                  </p>
-                </div>
-                <button
-                  onClick={() => onRemove(ing.id)}
-                  className="text-stone-700 hover:text-red-400 opacity-0 group-hover:opacity-100 transition-all p-1 rounded-lg hover:bg-red-950/30"
-                >
-                  <Trash2 size={14} />
-                </button>
+          {ingredients.map((ing) => (
+            <div
+              key={ing.id}
+              className="flex items-center justify-between bg-white border border-stone-200 rounded-xl px-4 py-3 group hover:border-stone-300 transition-colors shadow-sm"
+            >
+              <div>
+                <p className="text-sm font-semibold text-stone-800">{ing.name}</p>
+                <p className="text-xs text-stone-400 mt-0.5">
+                  {ing.calories} kcal · {ing.protein}g P · {ing.carbs}g C · {ing.fat}g F per {ing.servingSize}{ing.unit}
+                </p>
               </div>
-            ))}
-          </div>
+              <button
+                onClick={() => onRemove(ing.id)}
+                className="text-stone-300 hover:text-red-400 opacity-0 group-hover:opacity-100 transition-all p-1.5 rounded-lg hover:bg-red-50"
+              >
+                <Trash2 size={13} />
+              </button>
+            </div>
+          ))}
         </div>
       )}
     </div>
