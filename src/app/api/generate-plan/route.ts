@@ -232,10 +232,9 @@ export async function POST(req: NextRequest) {
 
     if (!ingredients || ingredients.length === 0)
       return NextResponse.json({ error: "No ingredients provided" }, { status: 400 });
-    if (!process.env.GEMINI_API_KEY)
+    const apiKey = process.env.GEMINI_API_KEY ?? process.env.GOOGLE_AI_API_KEY ?? "";
+    if (!apiKey)
       return NextResponse.json({ error: "GEMINI_API_KEY not configured" }, { status: 500 });
-
-    const apiKey = process.env.GEMINI_API_KEY;
     const mode: string = body.mode ?? "full";
 
     // ── Single meal regeneration ──────────────────────────────────
