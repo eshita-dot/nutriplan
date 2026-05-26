@@ -221,7 +221,7 @@ export async function POST(req: NextRequest) {
         existingMeals: string[];
       };
       const completion = await client.chat.completions.create({
-        model: "llama-3.3-70b-versatile",
+        model: "llama-3.1-8b-instant",
         max_tokens: 1500,
         response_format: { type: "json_object" },
         messages: [
@@ -242,7 +242,7 @@ export async function POST(req: NextRequest) {
         otherDayMeals: string[];
       };
       const completion = await client.chat.completions.create({
-        model: "llama-3.3-70b-versatile",
+        model: "llama-3.1-8b-instant",
         max_tokens: 2500,
         response_format: { type: "json_object" },
         messages: [
@@ -272,7 +272,7 @@ export async function POST(req: NextRequest) {
     const dayNames = DAYS.slice(0, numDays);
 
     const completion = await client.chat.completions.create({
-      model: "llama-3.3-70b-versatile",
+      model: "llama-3.1-8b-instant",
       max_tokens: 8000,
       response_format: { type: "json_object" },
       messages: [
