@@ -35,7 +35,7 @@ const INDIAN_MEAL_IDEAS = {
   ],
 };
 
-function buildPrompt(ingredients: Ingredient[], goals: NutritionGoals): string {
+function buildPrompt(ingredients: Ingredient[], goals: NutritionGoals, numDays: number, dayNames: string[]): string {
   const ingredientList = ingredients
     .map(
       (i) =>
@@ -65,6 +65,8 @@ ${goals.includeSnacks ? "- Include 1 snack per day" : "- No snacks needed"}
 
 MEAL INSPIRATION: ${INDIAN_MEAL_IDEAS.breakfast.slice(0, 4).join(", ")} / ${INDIAN_MEAL_IDEAS.lunch.slice(0, 4).join(", ")} / ${INDIAN_MEAL_IDEAS.dinner.slice(0, 4).join(", ")}${goals.includeSnacks ? ` / ${INDIAN_MEAL_IDEAS.snack.slice(0, 3).join(", ")}` : ""}
 
+Generate exactly ${numDays} day${numDays > 1 ? "s" : ""}: ${dayNames.join(", ")}.
+
 Return a JSON object (raw JSON only, no markdown):
 {"days":[{"day":"Monday","breakfast":{"name":"...","description":"...","calories":0,"protein":0,"carbs":0,"fat":0,"prepTime":0,"instructions":["step1","step2"],"ingredients":[{"name":"...","amount":0,"unit":"g"}]},"lunch":{...},"dinner":{...},"snacks":[]}]}
 
@@ -75,7 +77,7 @@ Rules:
 4. Keep daily nutrition totals close to targets (within 10%)
 5. Instructions should reflect real Indian cooking (tadka, tempering, rolling rotis, etc.) — 2-3 steps max, keep each step brief
 6. All numeric values must be realistic positive integers
-7. Include all 7 days: Monday through Sunday
+7. Include exactly ${numDays} day${numDays > 1 ? "s" : ""}: ${dayNames.join(", ")}
 8. Ingredient names in the ingredients array must match the available ingredients list exactly
 ${goals.includeSnacks ? "9. Include exactly 1 snack per day" : "9. Set snacks to empty array []"}
 10. Descriptions should be appetizing and mention key flavours (spicy, tangy, creamy, smoky, etc.)`;
@@ -83,8 +85,14 @@ ${goals.includeSnacks ? "9. Include exactly 1 snack per day" : "9. Set snacks to
 
 export async function POST(req: NextRequest) {
   try {
-    const { ingredients, goals }: { ingredients: Ingredient[]; goals: NutritionGoals } =
-      await req.json();
+    const { ingredients, goals, duration = "7" }: {
+      ingredients: Ingredient[];
+      goals: NutritionGoals;
+      duration?: string;
+    } = await req.json();
+
+    const numDays = Math.min(7, Math.max(1, parseInt(duration) || 7));
+    const dayNames = DAYS.slice(0, numDays);
 
     if (!ingredients || ingredients.length === 0) {
       return NextResponse.json({ error: "No ingredients provided" }, { status: 400 });
@@ -108,7 +116,7 @@ export async function POST(req: NextRequest) {
         },
         {
           role: "user",
-          content: buildPrompt(ingredients, goals),
+          content: buildPrompt(ingredients, goals, numDays, dayNames),
         },
       ],
     });

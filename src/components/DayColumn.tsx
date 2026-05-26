@@ -1,7 +1,7 @@
 "use client";
 import { DayPlan, NutritionGoals } from "@/lib/types";
 import { MealCard } from "./MealCard";
-import { MacroBar } from "./ui/MacroBar";
+import { getCaloriePresetKey, CALORIE_PRESETS } from "@/lib/utils";
 
 interface Props {
   day: DayPlan;
@@ -10,43 +10,38 @@ interface Props {
 }
 
 export function DayColumn({ day, goals, isToday }: Props) {
+  const presetKey = getCaloriePresetKey(goals.dailyCalories);
+  const preset = CALORIE_PRESETS.find((p) => p.key === presetKey) ?? CALORIE_PRESETS[1];
+  const withinRange = day.totalCalories >= preset.min && day.totalCalories <= preset.max;
+
   return (
-    <div className="min-w-[280px] max-w-[300px] flex flex-col gap-3">
+    <div className="min-w-[280px] max-w-[310px] flex flex-col gap-3">
       {/* Day header */}
-      <div
-        className={`rounded-xl px-4 py-3 ${
-          isToday
-            ? "bg-emerald-900/40 border border-emerald-700"
-            : "bg-slate-800/50 border border-slate-700"
-        }`}
-      >
-        <div className="flex items-center justify-between">
-          <h2 className={`font-bold text-sm ${isToday ? "text-emerald-300" : "text-white"}`}>
-            {day.day}
-            {isToday && <span className="ml-2 text-xs font-normal text-emerald-500">today</span>}
-          </h2>
-          <span className="text-lg font-bold text-emerald-400">{day.totalCalories}</span>
+      <div className={`rounded-2xl px-4 py-4 border ${
+        isToday
+          ? "bg-gradient-to-br from-orange-950/60 to-stone-900 border-orange-800/60"
+          : "bg-stone-900/60 border-stone-800"
+      }`}>
+        <div className="flex items-center justify-between mb-3">
+          <div>
+            <h2 className={`font-bold text-sm ${isToday ? "text-orange-300" : "text-stone-200"}`}>
+              {day.day}
+              {isToday && (
+                <span className="ml-2 text-xs font-normal bg-orange-500/20 text-orange-400 px-2 py-0.5 rounded-full">
+                  today
+                </span>
+              )}
+            </h2>
+          </div>
+          <div className="text-right">
+            <div className={`text-lg font-bold ${withinRange ? "text-green-400" : "text-stone-300"}`}>
+              ~{Math.round(day.totalCalories / 50) * 50}
+            </div>
+            <div className="text-xs text-stone-600">kcal</div>
+          </div>
         </div>
-        <p className="text-xs text-slate-500 mt-0.5">kcal target: {goals.dailyCalories}</p>
-        <div className="mt-3 space-y-1.5">
-          <MacroBar
-            label="Protein"
-            value={day.totalProtein}
-            goal={goals.proteinGrams}
-            color="bg-blue-500"
-          />
-          <MacroBar
-            label="Carbs"
-            value={day.totalCarbs}
-            goal={goals.carbsGrams}
-            color="bg-amber-500"
-          />
-          <MacroBar
-            label="Fat"
-            value={day.totalFat}
-            goal={goals.fatGrams}
-            color="bg-rose-500"
-          />
+        <div className="text-xs text-stone-500 bg-stone-800/50 rounded-lg px-3 py-1.5 text-center">
+          {preset.emoji} Target: {preset.range}
         </div>
       </div>
 

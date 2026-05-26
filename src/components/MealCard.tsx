@@ -1,8 +1,7 @@
 "use client";
 import { useState } from "react";
-import { Clock, ChevronDown, ChevronUp, UtensilsCrossed } from "lucide-react";
+import { Clock, ChevronDown, ChevronUp } from "lucide-react";
 import { Meal } from "@/lib/types";
-import { Badge } from "./ui/Badge";
 import { cn } from "@/lib/utils";
 
 interface Props {
@@ -10,97 +9,136 @@ interface Props {
   compact?: boolean;
 }
 
-const TYPE_META: Record<string, { label: string; variant: "green" | "blue" | "orange" | "purple" }> = {
-  breakfast: { label: "Breakfast", variant: "orange" },
-  lunch: { label: "Lunch", variant: "blue" },
-  dinner: { label: "Dinner", variant: "purple" },
-  snack: { label: "Snack", variant: "green" },
+const TYPE_META: Record<string, {
+  label: string;
+  emoji: string;
+  gradient: string;
+  border: string;
+  badge: string;
+  calColor: string;
+}> = {
+  breakfast: {
+    label: "Breakfast",
+    emoji: "🌅",
+    gradient: "from-orange-950/50 to-stone-900",
+    border: "border-orange-900/40",
+    badge: "bg-orange-500/15 text-orange-300 border-orange-500/25",
+    calColor: "text-orange-400",
+  },
+  lunch: {
+    label: "Lunch",
+    emoji: "☀️",
+    gradient: "from-sky-950/50 to-stone-900",
+    border: "border-sky-900/40",
+    badge: "bg-sky-500/15 text-sky-300 border-sky-500/25",
+    calColor: "text-sky-400",
+  },
+  dinner: {
+    label: "Dinner",
+    emoji: "🌙",
+    gradient: "from-violet-950/50 to-stone-900",
+    border: "border-violet-900/40",
+    badge: "bg-violet-500/15 text-violet-300 border-violet-500/25",
+    calColor: "text-violet-400",
+  },
+  snack: {
+    label: "Snack",
+    emoji: "🍎",
+    gradient: "from-green-950/50 to-stone-900",
+    border: "border-green-900/40",
+    badge: "bg-green-500/15 text-green-300 border-green-500/25",
+    calColor: "text-green-400",
+  },
 };
 
 export function MealCard({ meal, compact = false }: Props) {
   const [expanded, setExpanded] = useState(false);
-  const meta = TYPE_META[meal.type] ?? { label: meal.type, variant: "green" as const };
+  const meta = TYPE_META[meal.type] ?? TYPE_META.snack;
 
   return (
-    <div className="bg-slate-800/60 border border-slate-700 rounded-xl overflow-hidden hover:border-slate-600 transition-colors">
+    <div className={cn(
+      "rounded-2xl overflow-hidden border bg-gradient-to-br transition-all",
+      meta.gradient,
+      meta.border,
+      "hover:shadow-lg hover:shadow-black/20"
+    )}>
+      {/* Card header — clickable */}
       <div
-        className={cn("p-4 cursor-pointer", compact && "p-3")}
+        className={cn("cursor-pointer", compact ? "p-3.5" : "p-5")}
         onClick={() => setExpanded(!expanded)}
       >
-        <div className="flex items-start justify-between gap-2">
+        <div className="flex items-start justify-between gap-3">
           <div className="flex-1 min-w-0">
-            <div className="flex items-center gap-2 mb-1 flex-wrap">
-              <Badge variant={meta.variant}>{meta.label}</Badge>
-              <span className="flex items-center gap-1 text-xs text-slate-500">
-                <Clock size={11} /> {meal.prepTime}m
+            {/* Type badge + time */}
+            <div className="flex items-center gap-2 mb-2">
+              <span className={cn("px-2.5 py-0.5 rounded-full text-xs font-semibold border", meta.badge)}>
+                {meta.emoji} {meta.label}
+              </span>
+              <span className="flex items-center gap-1 text-xs text-stone-500">
+                <Clock size={10} /> {meal.prepTime}m
               </span>
             </div>
-            <h3 className={cn("font-semibold text-white truncate", compact ? "text-sm" : "text-base")}>
+            {/* Name */}
+            <h3 className={cn("font-bold text-stone-100 leading-snug", compact ? "text-sm" : "text-base")}>
               {meal.name}
             </h3>
-            {!compact && meal.description && (
-              <p className="text-xs text-slate-400 mt-0.5 line-clamp-2">{meal.description}</p>
+            {/* Description — always visible */}
+            {meal.description && (
+              <p className="text-xs text-stone-400 mt-1 line-clamp-2 leading-relaxed">{meal.description}</p>
             )}
           </div>
+          {/* Calories */}
           <div className="text-right shrink-0">
-            <div className={cn("font-bold text-emerald-400", compact ? "text-sm" : "text-lg")}>
-              {meal.calories}
+            <div className={cn("font-bold", compact ? "text-base" : "text-xl", meta.calColor)}>
+              ~{Math.round(meal.calories / 50) * 50}
             </div>
-            <div className="text-xs text-slate-500">kcal</div>
+            <div className="text-xs text-stone-600">kcal</div>
           </div>
         </div>
 
-        {/* Macro chips */}
-        <div className="flex gap-3 mt-2.5">
-          <span className="text-xs text-slate-400">
-            <span className="text-blue-400 font-medium">{meal.protein}g</span> P
-          </span>
-          <span className="text-xs text-slate-400">
-            <span className="text-amber-400 font-medium">{meal.carbs}g</span> C
-          </span>
-          <span className="text-xs text-slate-400">
-            <span className="text-rose-400 font-medium">{meal.fat}g</span> F
-          </span>
-        </div>
-
-        <div className="flex items-center justify-end mt-2 text-slate-500">
-          {expanded ? <ChevronUp size={14} /> : <ChevronDown size={14} />}
+        {/* Expand toggle */}
+        <div className="flex items-center justify-between mt-3">
+          <p className="text-xs text-stone-600 italic">tap for recipe</p>
+          <div className="text-stone-600">
+            {expanded ? <ChevronUp size={14} /> : <ChevronDown size={14} />}
+          </div>
         </div>
       </div>
 
-      {/* Expanded details */}
+      {/* Expanded — ingredients + instructions */}
       {expanded && (
-        <div className="border-t border-slate-700 p-4 space-y-4">
+        <div className="border-t border-white/5 bg-black/20 p-4 space-y-4">
           {meal.ingredients.length > 0 && (
             <div>
-              <p className="text-xs text-slate-500 font-medium uppercase tracking-wider mb-2">
-                Ingredients
+              <p className="text-xs text-stone-500 font-semibold uppercase tracking-wider mb-2">
+                What you need
               </p>
-              <ul className="space-y-1">
+              <div className="grid grid-cols-2 gap-1">
                 {meal.ingredients.map((item, i) => (
-                  <li key={i} className="flex items-center justify-between text-sm">
-                    <span className="text-slate-300">{item.ingredient.name}</span>
-                    <span className="text-slate-500">
-                      {item.amount}{item.ingredient.unit}
-                    </span>
-                  </li>
+                  <div key={i} className="flex items-center justify-between text-xs bg-white/5 rounded-lg px-3 py-1.5">
+                    <span className="text-stone-300 truncate">{item.ingredient.name}</span>
+                    <span className="text-stone-500 ml-2 shrink-0">{item.amount}{item.ingredient.unit}</span>
+                  </div>
                 ))}
-              </ul>
+              </div>
             </div>
           )}
 
           {meal.instructions.length > 0 && (
             <div>
-              <p className="text-xs text-slate-500 font-medium uppercase tracking-wider mb-2 flex items-center gap-1.5">
-                <UtensilsCrossed size={12} /> Instructions
+              <p className="text-xs text-stone-500 font-semibold uppercase tracking-wider mb-2">
+                How to make it
               </p>
               <ol className="space-y-2">
                 {meal.instructions.map((step, i) => (
-                  <li key={i} className="flex gap-3 text-sm text-slate-300">
-                    <span className="shrink-0 w-5 h-5 rounded-full bg-slate-700 text-slate-400 text-xs flex items-center justify-center font-medium">
+                  <li key={i} className="flex gap-3 text-sm text-stone-300">
+                    <span className={cn(
+                      "shrink-0 w-5 h-5 rounded-full text-xs flex items-center justify-center font-bold",
+                      meta.badge, "border"
+                    )}>
                       {i + 1}
                     </span>
-                    <span>{step}</span>
+                    <span className="leading-relaxed">{step}</span>
                   </li>
                 ))}
               </ol>

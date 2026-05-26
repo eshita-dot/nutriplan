@@ -3,16 +3,9 @@ import { useState, useCallback } from "react";
 import { useQuery, useMutation } from "convex/react";
 import { api } from "../../convex/_generated/api";
 import { Id } from "../../convex/_generated/dataModel";
-import {
-  Salad,
-  RefreshCw,
-  ChevronLeft,
-  ChevronRight,
-  Sparkles,
-  AlertCircle,
-} from "lucide-react";
+import { RefreshCw, ChevronLeft, ChevronRight, Sparkles, AlertCircle, UtensilsCrossed } from "lucide-react";
 import { Ingredient, NutritionGoals, WeekPlan } from "@/lib/types";
-import { goalDefaults } from "@/lib/utils";
+import { goalDefaults, cn } from "@/lib/utils";
 import { useSessionId } from "@/lib/useSessionId";
 import { IngredientsPanel } from "@/components/IngredientsPanel";
 import { GoalsPanel } from "@/components/GoalsPanel";
@@ -20,31 +13,26 @@ import { DayColumn } from "@/components/DayColumn";
 import { WeekSummary } from "@/components/WeekSummary";
 
 type Tab = "ingredients" | "goals" | "plan";
+type Duration = "1" | "3" | "7";
+
+const DURATION_OPTIONS: { value: Duration; label: string; sublabel: string }[] = [
+  { value: "1", label: "Today", sublabel: "1 day" },
+  { value: "3", label: "3 Days", sublabel: "Thu–Sat" },
+  { value: "7", label: "Full Week", sublabel: "Mon–Sun" },
+];
 
 export default function Home() {
   const sessionId = useSessionId();
 
-  // Convex queries — "skip" until session ID is ready
-  const convexIngredients = useQuery(
-    api.ingredients.list,
-    sessionId ? { sessionId } : "skip"
-  );
-  const convexGoals = useQuery(
-    api.goals.get,
-    sessionId ? { sessionId } : "skip"
-  );
-  const plan = useQuery(
-    api.weekPlans.get,
-    sessionId ? { sessionId } : "skip"
-  ) as WeekPlan | null | undefined;
+  const convexIngredients = useQuery(api.ingredients.list, sessionId ? { sessionId } : "skip");
+  const convexGoals = useQuery(api.goals.get, sessionId ? { sessionId } : "skip");
+  const plan = useQuery(api.weekPlans.get, sessionId ? { sessionId } : "skip") as WeekPlan | null | undefined;
 
-  // Convex mutations
   const addIngredient = useMutation(api.ingredients.add);
   const removeIngredient = useMutation(api.ingredients.remove);
   const upsertGoals = useMutation(api.goals.upsert);
   const savePlan = useMutation(api.weekPlans.save);
 
-  // Map Convex docs → app types
   const ingredients: Ingredient[] = (convexIngredients ?? []).map((doc) => ({
     id: doc._id as string,
     name: doc.name,
@@ -68,15 +56,14 @@ export default function Home() {
       }
     : goalDefaults();
 
-  // Local UI state
   const [tab, setTab] = useState<Tab>("ingredients");
   const [generating, setGenerating] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [dayOffset, setDayOffset] = useState(0);
+  const [duration, setDuration] = useState<Duration>("7");
 
   const isLoading = !sessionId || convexIngredients === undefined;
 
-  // Ingredient handlers
   const handleAdd = useCallback(
     async (item: Omit<Ingredient, "id">) => {
       if (!sessionId) return;
@@ -92,7 +79,6 @@ export default function Home() {
     [removeIngredient]
   );
 
-  // Goals handler — syncs to Convex on every change
   const handleGoalsChange = useCallback(
     async (newGoals: NutritionGoals) => {
       if (!sessionId) return;
@@ -101,7 +87,6 @@ export default function Home() {
     [sessionId, upsertGoals]
   );
 
-  // Generate meal plan
   const generate = useCallback(async () => {
     if (!sessionId || ingredients.length === 0) {
       setError("Add at least one ingredient before generating a meal plan.");
@@ -114,7 +99,7 @@ export default function Home() {
       const res = await fetch("/api/generate-plan", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ ingredients, goals }),
+        body: JSON.stringify({ ingredients, goals, duration }),
       });
       const data = await res.json();
       if (!res.ok) throw new Error(data.error ?? "Unknown error");
@@ -130,89 +115,119 @@ export default function Home() {
     } finally {
       setGenerating(false);
     }
-  }, [sessionId, ingredients, goals, savePlan]);
+  }, [sessionId, ingredients, goals, duration, savePlan]);
 
-  const visibleDays = plan ? plan.days.slice(dayOffset, dayOffset + 3) : [];
+  const daysToShow = parseInt(duration);
+  const visibleDays = plan ? plan.days.slice(dayOffset, dayOffset + Math.min(3, daysToShow)) : [];
   const todayIndex = new Date().getDay();
 
   const tabs: { id: Tab; label: string; count?: number }[] = [
     { id: "ingredients", label: "Pantry", count: ingredients.length },
-    { id: "goals", label: "Goals" },
-    { id: "plan", label: "Meal Plan", count: plan ? 7 : undefined },
+    { id: "goals", label: "Preferences" },
+    { id: "plan", label: "My Plan", count: plan ? plan.days.length : undefined },
   ];
 
   return (
-    <div className="min-h-screen bg-slate-950 text-white">
-      <header className="border-b border-slate-800 bg-slate-950/80 backdrop-blur-sm sticky top-0 z-10">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 py-3 flex items-center justify-between">
-          <div className="flex items-center gap-2.5">
-            <div className="w-8 h-8 rounded-lg bg-emerald-600 flex items-center justify-center">
-              <Salad size={18} />
+    <div className="min-h-screen" style={{ background: "var(--background)" }}>
+      {/* Header */}
+      <header className="border-b border-stone-800/80 bg-[#0d0905]/90 backdrop-blur-sm sticky top-0 z-10">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 py-3">
+          <div className="flex items-center gap-4 flex-wrap">
+            {/* Brand */}
+            <div className="flex items-center gap-2.5 shrink-0">
+              <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-orange-500 to-red-500 flex items-center justify-center text-lg shadow-lg shadow-orange-900/30">
+                🍽️
+              </div>
+              <div>
+                <h1 className="font-bold text-stone-100 text-sm leading-none">What To Eat</h1>
+                <p className="text-xs text-stone-600 leading-none mt-0.5">AI Indian Meal Planner</p>
+              </div>
             </div>
-            <div>
-              <h1 className="font-bold text-white text-sm leading-none">NutriPlan</h1>
-              <p className="text-xs text-slate-500 leading-none mt-0.5">Indian AI Meal Planner</p>
-            </div>
-          </div>
 
-          <nav className="flex items-center gap-1">
-            {tabs.map((t) => (
+            {/* Nav tabs */}
+            <nav className="flex items-center gap-1 flex-1 justify-center">
+              {tabs.map((t) => (
+                <button
+                  key={t.id}
+                  onClick={() => setTab(t.id)}
+                  className={cn(
+                    "px-3 py-1.5 rounded-xl text-xs font-semibold transition-all flex items-center gap-1.5",
+                    tab === t.id
+                      ? "bg-stone-800 text-stone-100"
+                      : "text-stone-500 hover:text-stone-300 hover:bg-stone-800/50"
+                  )}
+                >
+                  {t.label}
+                  {t.count !== undefined && t.count > 0 && (
+                    <span className="w-4 h-4 rounded-full bg-orange-500 text-white text-[10px] flex items-center justify-center font-bold">
+                      {t.count > 9 ? "9+" : t.count}
+                    </span>
+                  )}
+                </button>
+              ))}
+            </nav>
+
+            {/* Duration + Generate */}
+            <div className="flex items-center gap-2 shrink-0">
+              <div className="flex items-center bg-stone-900 border border-stone-800 rounded-xl p-0.5">
+                {DURATION_OPTIONS.map((opt) => (
+                  <button
+                    key={opt.value}
+                    onClick={() => setDuration(opt.value)}
+                    className={cn(
+                      "px-2.5 py-1.5 rounded-lg text-xs font-medium transition-all",
+                      duration === opt.value
+                        ? "bg-orange-500 text-white shadow"
+                        : "text-stone-500 hover:text-stone-300"
+                    )}
+                  >
+                    {opt.label}
+                  </button>
+                ))}
+              </div>
+
               <button
-                key={t.id}
-                onClick={() => setTab(t.id)}
-                className={`px-3 py-1.5 rounded-lg text-sm font-medium transition-colors flex items-center gap-1.5 ${
-                  tab === t.id
-                    ? "bg-slate-800 text-white"
-                    : "text-slate-400 hover:text-slate-200 hover:bg-slate-800/50"
-                }`}
+                onClick={generate}
+                disabled={generating || isLoading || ingredients.length === 0}
+                className="flex items-center gap-2 bg-orange-500 hover:bg-orange-400 disabled:opacity-40 disabled:cursor-not-allowed px-4 py-2 rounded-xl text-xs font-bold transition-all shadow-lg shadow-orange-900/30 text-white"
               >
-                {t.label}
-                {t.count !== undefined && (
-                  <span className="w-4 h-4 rounded-full bg-emerald-600 text-white text-[10px] flex items-center justify-center font-bold">
-                    {t.count > 9 ? "9+" : t.count}
-                  </span>
+                {generating ? (
+                  <><RefreshCw size={14} className="animate-spin" />Cooking…</>
+                ) : (
+                  <><Sparkles size={14} />{plan ? "Regenerate" : "Generate"}</>
                 )}
               </button>
-            ))}
-          </nav>
-
-          <button
-            onClick={generate}
-            disabled={generating || isLoading || ingredients.length === 0}
-            className="flex items-center gap-2 bg-emerald-600 hover:bg-emerald-500 disabled:opacity-50 disabled:cursor-not-allowed px-4 py-2 rounded-lg text-sm font-semibold transition-colors"
-          >
-            {generating ? (
-              <><RefreshCw size={15} className="animate-spin" />Generating…</>
-            ) : (
-              <><Sparkles size={15} />{plan ? "Regenerate" : "Generate Plan"}</>
-            )}
-          </button>
+            </div>
+          </div>
         </div>
       </header>
 
+      {/* Error banner */}
       {error && (
         <div className="max-w-7xl mx-auto px-4 sm:px-6 mt-4">
-          <div className="flex items-center gap-3 bg-red-950/50 border border-red-800 rounded-xl px-4 py-3 text-sm text-red-300">
-            <AlertCircle size={16} className="shrink-0" />
+          <div className="flex items-center gap-3 bg-red-950/50 border border-red-900/60 rounded-2xl px-4 py-3 text-sm text-red-300">
+            <AlertCircle size={16} className="shrink-0 text-red-400" />
             {error}
-            <button onClick={() => setError(null)} className="ml-auto text-red-500 hover:text-red-300">✕</button>
+            <button onClick={() => setError(null)} className="ml-auto text-red-600 hover:text-red-400 text-lg leading-none">×</button>
           </div>
         </div>
       )}
 
-      <main className="max-w-7xl mx-auto px-4 sm:px-6 py-6">
+      {/* Main content */}
+      <main className="max-w-7xl mx-auto px-4 sm:px-6 py-8">
         {isLoading ? (
-          <div className="flex items-center justify-center py-24">
-            <div className="w-8 h-8 rounded-full border-2 border-emerald-600 border-t-transparent animate-spin" />
+          <div className="flex items-center justify-center py-32">
+            <div className="w-8 h-8 rounded-full border-2 border-orange-500 border-t-transparent animate-spin" />
           </div>
         ) : (
           <>
+            {/* Pantry tab */}
             {tab === "ingredients" && (
               <div className="max-w-2xl mx-auto">
-                <div className="mb-6">
-                  <h2 className="text-xl font-bold text-white">Your Pantry</h2>
-                  <p className="text-sm text-slate-400 mt-1">
-                    Add your Indian pantry staples — dals, atta, vegetables, paneer, and more. The AI builds your week using only what you have.
+                <div className="mb-8">
+                  <h2 className="text-2xl font-bold text-stone-100">Your Pantry 🧺</h2>
+                  <p className="text-sm text-stone-400 mt-2 leading-relaxed">
+                    Tell us what's in your kitchen — dals, veggies, grains, dairy, proteins. The AI cooks only with what you have.
                   </p>
                 </div>
                 <IngredientsPanel
@@ -221,79 +236,86 @@ export default function Home() {
                   onRemove={handleRemove}
                 />
                 {ingredients.length > 0 && (
-                  <div className="mt-6 text-center">
+                  <div className="mt-8 flex justify-between items-center">
+                    <p className="text-xs text-stone-600">{ingredients.length} ingredient{ingredients.length !== 1 ? "s" : ""} added</p>
                     <button
                       onClick={() => setTab("goals")}
-                      className="px-6 py-2.5 bg-slate-700 hover:bg-slate-600 rounded-xl text-sm font-medium transition-colors"
+                      className="px-5 py-2.5 bg-stone-800 hover:bg-stone-700 rounded-xl text-sm font-semibold text-stone-200 transition-colors"
                     >
-                      Next: Set your goals →
+                      Next: Preferences →
                     </button>
                   </div>
                 )}
               </div>
             )}
 
+            {/* Preferences tab */}
             {tab === "goals" && (
               <div className="max-w-2xl mx-auto">
-                <div className="mb-6">
-                  <h2 className="text-xl font-bold text-white">Nutrition Goals</h2>
-                  <p className="text-sm text-slate-400 mt-1">
-                    Set your calorie and macro targets. Choose Vegetarian, Jain, Sattvic or any other preference — every meal will be tailored accordingly.
+                <div className="mb-8">
+                  <h2 className="text-2xl font-bold text-stone-100">Your Preferences ⚙️</h2>
+                  <p className="text-sm text-stone-400 mt-2 leading-relaxed">
+                    Tell us how you eat and any restrictions — we'll tailor every meal to fit your lifestyle.
                   </p>
                 </div>
                 <GoalsPanel goals={goals} onChange={handleGoalsChange} />
-                <div className="mt-6 flex justify-between">
+                <div className="mt-8 flex justify-between">
                   <button
                     onClick={() => setTab("ingredients")}
-                    className="px-6 py-2.5 bg-slate-700 hover:bg-slate-600 rounded-xl text-sm font-medium transition-colors"
+                    className="px-5 py-2.5 bg-stone-800 hover:bg-stone-700 rounded-xl text-sm font-semibold text-stone-200 transition-colors"
                   >
                     ← Back
                   </button>
                   <button
                     onClick={generate}
                     disabled={generating || ingredients.length === 0}
-                    className="flex items-center gap-2 bg-emerald-600 hover:bg-emerald-500 disabled:opacity-50 disabled:cursor-not-allowed px-6 py-2.5 rounded-xl text-sm font-semibold transition-colors"
+                    className="flex items-center gap-2 bg-orange-500 hover:bg-orange-400 disabled:opacity-40 disabled:cursor-not-allowed px-6 py-2.5 rounded-xl text-sm font-bold text-white transition-all"
                   >
                     {generating ? (
-                      <><RefreshCw size={15} className="animate-spin" />Generating…</>
+                      <><RefreshCw size={15} className="animate-spin" />Cooking…</>
                     ) : (
-                      <><Sparkles size={15} />Generate Meal Plan</>
+                      <><Sparkles size={15} />Generate My Plan</>
                     )}
                   </button>
                 </div>
               </div>
             )}
 
+            {/* Plan tab */}
             {tab === "plan" && (
               <div className="space-y-6">
                 {plan ? (
                   <>
                     <div className="flex items-center justify-between">
                       <div>
-                        <h2 className="text-xl font-bold text-white">Your Week</h2>
-                        <p className="text-sm text-slate-400 mt-0.5">
-                          Generated {new Date(plan.createdAt).toLocaleDateString()}
+                        <h2 className="text-2xl font-bold text-stone-100">Your Meal Plan 🍛</h2>
+                        <p className="text-xs text-stone-500 mt-1">
+                          Generated {new Date(plan.createdAt).toLocaleDateString("en-IN", { day: "numeric", month: "long", year: "numeric" })}
+                          {" · "}{plan.days.length} day{plan.days.length !== 1 ? "s" : ""}
+                          {plan.goals.dietaryRestrictions.length > 0 && ` · ${plan.goals.dietaryRestrictions[0]}${plan.goals.dietaryRestrictions.length > 1 ? ` +${plan.goals.dietaryRestrictions.length - 1}` : ""}`}
                         </p>
                       </div>
-                      <div className="flex items-center gap-2">
-                        <button
-                          onClick={() => setDayOffset(Math.max(0, dayOffset - 1))}
-                          disabled={dayOffset === 0}
-                          className="p-2 bg-slate-800 hover:bg-slate-700 disabled:opacity-30 rounded-lg transition-colors"
-                        >
-                          <ChevronLeft size={16} />
-                        </button>
-                        <span className="text-sm text-slate-400 w-32 text-center">
-                          Days {dayOffset + 1}–{Math.min(dayOffset + 3, plan.days.length)}
-                        </span>
-                        <button
-                          onClick={() => setDayOffset(Math.min(plan.days.length - 3, dayOffset + 1))}
-                          disabled={dayOffset >= plan.days.length - 3}
-                          className="p-2 bg-slate-800 hover:bg-slate-700 disabled:opacity-30 rounded-lg transition-colors"
-                        >
-                          <ChevronRight size={16} />
-                        </button>
-                      </div>
+                      {plan.days.length > 3 && (
+                        <div className="flex items-center gap-2">
+                          <button
+                            onClick={() => setDayOffset(Math.max(0, dayOffset - 1))}
+                            disabled={dayOffset === 0}
+                            className="p-2 bg-stone-800 hover:bg-stone-700 disabled:opacity-30 rounded-xl transition-colors"
+                          >
+                            <ChevronLeft size={16} />
+                          </button>
+                          <span className="text-xs text-stone-500 w-24 text-center">
+                            Days {dayOffset + 1}–{Math.min(dayOffset + 3, plan.days.length)}
+                          </span>
+                          <button
+                            onClick={() => setDayOffset(Math.min(plan.days.length - 3, dayOffset + 1))}
+                            disabled={dayOffset >= plan.days.length - 3}
+                            className="p-2 bg-stone-800 hover:bg-stone-700 disabled:opacity-30 rounded-xl transition-colors"
+                          >
+                            <ChevronRight size={16} />
+                          </button>
+                        </div>
+                      )}
                     </div>
 
                     <WeekSummary plan={plan} />
@@ -310,20 +332,18 @@ export default function Home() {
                     </div>
                   </>
                 ) : (
-                  <div className="flex flex-col items-center justify-center py-24 text-center">
-                    <div className="w-16 h-16 rounded-2xl bg-slate-800 flex items-center justify-center mb-4">
-                      <Salad size={32} className="text-slate-600" />
-                    </div>
-                    <h3 className="text-lg font-semibold text-white">No meal plan yet</h3>
-                    <p className="text-sm text-slate-400 mt-1 max-w-sm">
-                      Add your dals, sabzis, and staples to the pantry, set your goals, then hit{" "}
-                      <strong>Generate Plan</strong> for a full week of authentic Indian meals.
+                  <div className="flex flex-col items-center justify-center py-32 text-center">
+                    <div className="text-6xl mb-6">🍛</div>
+                    <h3 className="text-xl font-bold text-stone-200">No plan yet</h3>
+                    <p className="text-sm text-stone-500 mt-2 max-w-sm leading-relaxed">
+                      Add what's in your kitchen, set your preferences, then hit{" "}
+                      <strong className="text-stone-300">Generate</strong> for a full Indian meal plan.
                     </p>
                     <button
                       onClick={() => setTab("ingredients")}
-                      className="mt-6 px-5 py-2.5 bg-emerald-600 hover:bg-emerald-500 rounded-xl text-sm font-semibold transition-colors"
+                      className="mt-6 px-6 py-3 bg-orange-500 hover:bg-orange-400 rounded-xl text-sm font-bold text-white transition-all"
                     >
-                      Get started →
+                      Start with your pantry →
                     </button>
                   </div>
                 )}
@@ -333,13 +353,17 @@ export default function Home() {
         )}
       </main>
 
+      {/* Generating overlay */}
       {generating && (
-        <div className="fixed inset-0 bg-slate-950/80 backdrop-blur-sm z-50 flex items-center justify-center">
-          <div className="bg-slate-900 border border-slate-700 rounded-2xl p-8 text-center max-w-sm mx-4">
-            <div className="w-12 h-12 rounded-full border-2 border-emerald-600 border-t-transparent animate-spin mx-auto mb-4" />
-            <h3 className="text-lg font-semibold text-white">Building your meal plan</h3>
-            <p className="text-sm text-slate-400 mt-2">
-              Claude AI is crafting 7 days of authentic Indian meals — dals, sabzis, rotis and more — matched to your pantry and nutrition goals…
+        <div className="fixed inset-0 bg-black/70 backdrop-blur-sm z-50 flex items-center justify-center">
+          <div className="bg-stone-900 border border-stone-700 rounded-3xl p-10 text-center max-w-sm mx-4 shadow-2xl">
+            <div className="text-5xl mb-6 animate-bounce">🍳</div>
+            <div className="w-8 h-8 rounded-full border-2 border-orange-500 border-t-transparent animate-spin mx-auto mb-5" />
+            <h3 className="text-lg font-bold text-stone-100">Cooking up your plan</h3>
+            <p className="text-sm text-stone-400 mt-2 leading-relaxed">
+              The AI is crafting{" "}
+              {duration === "1" ? "today's meals" : duration === "3" ? "3 days of meals" : "a full week of meals"} —
+              authentic Indian food, matched to your pantry and preferences.
             </p>
           </div>
         </div>

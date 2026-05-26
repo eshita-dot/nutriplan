@@ -14,8 +14,8 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "NutriPlan — Indian AI Meal Planner",
-  description: "Generate a personalized 7-day Indian meal plan with authentic dal, sabzi, roti, and rice dishes tailored to your nutrition goals",
+  title: "What To Eat — AI Indian Meal Planner",
+  description: "Tell us what's in your kitchen and we'll plan your meals for today, 3 days, or the whole week — authentic Indian food, personalised for you.",
 };
 
 export default function RootLayout({
@@ -24,10 +24,7 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html
-      lang="en"
-      className={`${geistSans.variable} ${geistMono.variable} h-full antialiased`}
-    >
+    <html lang="en" className={`${geistSans.variable} ${geistMono.variable} h-full antialiased`}>
       <body className="min-h-full flex flex-col">
         <ConvexClientProvider>{children}</ConvexClientProvider>
       </body>

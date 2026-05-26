@@ -1,191 +1,132 @@
 "use client";
-import { useState } from "react";
 import { NutritionGoals } from "@/lib/types";
-import { caloriesFromMacros } from "@/lib/utils";
-import { MacroBar } from "./ui/MacroBar";
+import { cn, CALORIE_PRESETS, getCaloriePresetKey } from "@/lib/utils";
 
 interface Props {
   goals: NutritionGoals;
   onChange: (g: NutritionGoals) => void;
 }
 
-const PRESETS = [
-  { label: "Weight Loss", desc: "Light Indian meals", calories: 1600, protein: 100, carbs: 180, fat: 45 },
-  { label: "Balanced Thali", desc: "Traditional portions", calories: 2000, protein: 70, carbs: 280, fat: 60 },
-  { label: "High Protein", desc: "Dal + paneer focused", calories: 2200, protein: 160, carbs: 220, fat: 65 },
-  { label: "Active & Fit", desc: "For daily workouts", calories: 2800, protein: 180, carbs: 350, fat: 80 },
-];
-
 const RESTRICTIONS = [
-  "Vegetarian",
-  "Vegan",
-  "Jain (no root vegetables)",
-  "Sattvic (no onion/garlic)",
-  "Eggetarian",
-  "No Beef",
-  "No Pork",
-  "Gluten-free",
-  "Dairy-free",
-  "Diabetic-friendly",
-  "Low Sodium",
-  "Halal",
+  { label: "🌱 Vegetarian", value: "Vegetarian" },
+  { label: "🥦 Vegan", value: "Vegan" },
+  { label: "🙏 Jain", value: "Jain (no root vegetables)" },
+  { label: "✨ Sattvic", value: "Sattvic (no onion/garlic)" },
+  { label: "🥚 Eggetarian", value: "Eggetarian" },
+  { label: "🚫🐄 No Beef", value: "No Beef" },
+  { label: "🚫🐷 No Pork", value: "No Pork" },
+  { label: "🌾 Gluten-free", value: "Gluten-free" },
+  { label: "🥛 Dairy-free", value: "Dairy-free" },
+  { label: "💉 Diabetic-friendly", value: "Diabetic-friendly" },
+  { label: "🧂 Low Sodium", value: "Low Sodium" },
+  { label: "☪️ Halal", value: "Halal" },
 ];
 
 export function GoalsPanel({ goals, onChange }: Props) {
-  const [syncCalories, setSyncCalories] = useState(false);
+  const activePresetKey = getCaloriePresetKey(goals.dailyCalories);
 
-  const update = (patch: Partial<NutritionGoals>) => {
-    const next = { ...goals, ...patch };
-    if (syncCalories) {
-      next.dailyCalories = caloriesFromMacros(next.proteinGrams, next.carbsGrams, next.fatGrams);
-    }
-    onChange(next);
-  };
-
-  const toggleRestriction = (r: string) => {
-    const current = goals.dietaryRestrictions;
+  const applyPreset = (preset: (typeof CALORIE_PRESETS)[number]) => {
     onChange({
       ...goals,
-      dietaryRestrictions: current.includes(r)
-        ? current.filter((x) => x !== r)
-        : [...current, r],
+      dailyCalories: preset.mid,
+      proteinGrams: preset.protein,
+      carbsGrams: preset.carbs,
+      fatGrams: preset.fat,
     });
   };
 
-  const NumberField = ({
-    label,
-    field,
-    unit,
-    min = 0,
-    max = 5000,
-  }: {
-    label: string;
-    field: keyof NutritionGoals;
-    unit: string;
-    min?: number;
-    max?: number;
-  }) => (
-    <div>
-      <label className="block text-xs text-slate-400 mb-1">{label}</label>
-      <div className="flex items-center gap-2">
-        <input
-          type="number"
-          min={min}
-          max={max}
-          value={goals[field] as number}
-          onChange={(e) => update({ [field]: parseFloat(e.target.value) || 0 })}
-          className="w-full bg-slate-800 border border-slate-600 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-emerald-500"
-        />
-        <span className="text-xs text-slate-500 w-8">{unit}</span>
-      </div>
-    </div>
-  );
-
-  const macroCalories = caloriesFromMacros(goals.proteinGrams, goals.carbsGrams, goals.fatGrams);
+  const toggleRestriction = (value: string) => {
+    const current = goals.dietaryRestrictions;
+    onChange({
+      ...goals,
+      dietaryRestrictions: current.includes(value)
+        ? current.filter((x) => x !== value)
+        : [...current, value],
+    });
+  };
 
   return (
-    <div className="space-y-5">
-      {/* Presets */}
+    <div className="space-y-8">
+      {/* Calorie range */}
       <div>
-        <p className="text-xs text-slate-500 uppercase tracking-wider font-medium mb-2">Goal presets</p>
-        <div className="grid grid-cols-2 gap-2">
-          {PRESETS.map((p) => (
-            <button
-              key={p.label}
-              onClick={() =>
-                onChange({
-                  ...goals,
-                  dailyCalories: p.calories,
-                  proteinGrams: p.protein,
-                  carbsGrams: p.carbs,
-                  fatGrams: p.fat,
-                })
-              }
-              className="px-3 py-2 bg-slate-800 border border-slate-600 hover:border-emerald-500 rounded-lg text-xs text-slate-300 hover:text-white transition-all text-left"
-            >
-              <div className="font-semibold">{p.label}</div>
-              <div className="text-slate-500">{p.desc}</div>
-              <div className="text-emerald-600 mt-0.5">{p.calories} kcal</div>
-            </button>
-          ))}
+        <p className="text-sm font-semibold text-stone-200 mb-1">How much do you eat per day?</p>
+        <p className="text-xs text-stone-500 mb-4">Pick the range that matches your lifestyle — we handle the rest.</p>
+        <div className="grid grid-cols-2 gap-3">
+          {CALORIE_PRESETS.map((preset) => {
+            const active = activePresetKey === preset.key;
+            return (
+              <button
+                key={preset.key}
+                onClick={() => applyPreset(preset)}
+                className={cn(
+                  "relative rounded-2xl p-4 text-left transition-all border-2",
+                  active
+                    ? "border-orange-500 bg-orange-950/40"
+                    : "border-stone-800 bg-stone-900/60 hover:border-stone-700"
+                )}
+              >
+                <div className="text-2xl mb-2">{preset.emoji}</div>
+                <div className={cn("font-bold text-sm", active ? "text-orange-300" : "text-stone-200")}>
+                  {preset.label}
+                </div>
+                <div className="text-xs text-stone-500 mt-0.5">{preset.sublabel}</div>
+                <div className={cn("text-xs font-medium mt-2", active ? "text-orange-400" : "text-stone-400")}>
+                  {preset.range}
+                </div>
+                {active && (
+                  <div className="absolute top-3 right-3 w-5 h-5 rounded-full bg-orange-500 flex items-center justify-center">
+                    <svg width="10" height="8" viewBox="0 0 10 8" fill="none">
+                      <path d="M1 4L3.5 6.5L9 1" stroke="white" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+                    </svg>
+                  </div>
+                )}
+              </button>
+            );
+          })}
         </div>
       </div>
 
-      {/* Calorie target */}
-      <div>
-        <p className="text-xs text-slate-500 uppercase tracking-wider font-medium mb-2">Calorie target</p>
-        <NumberField label="Daily calories" field="dailyCalories" unit="kcal" max={6000} />
-        <div className="flex items-center gap-2 mt-2">
-          <input
-            type="checkbox"
-            id="sync"
-            checked={syncCalories}
-            onChange={(e) => setSyncCalories(e.target.checked)}
-            className="accent-emerald-500"
-          />
-          <label htmlFor="sync" className="text-xs text-slate-400">
-            Auto-calculate from macros ({macroCalories} kcal)
-          </label>
+      {/* Snacks toggle */}
+      <div className="flex items-center justify-between bg-stone-900/60 border border-stone-800 rounded-2xl px-5 py-4">
+        <div>
+          <p className="text-sm font-semibold text-stone-200">Include daily snacks 🍎</p>
+          <p className="text-xs text-stone-500 mt-0.5">A light bite between meals</p>
         </div>
-      </div>
-
-      {/* Macros */}
-      <div>
-        <p className="text-xs text-slate-500 uppercase tracking-wider font-medium mb-2">Macronutrients</p>
-        <div className="space-y-3">
-          <NumberField label="Protein" field="proteinGrams" unit="g" />
-          <NumberField label="Carbohydrates" field="carbsGrams" unit="g" />
-          <NumberField label="Fat" field="fatGrams" unit="g" />
-        </div>
-      </div>
-
-      {/* Preview */}
-      <div className="bg-slate-800/50 rounded-xl p-4 space-y-3">
-        <p className="text-xs text-slate-500 font-medium">Preview vs targets</p>
-        <MacroBar label="Protein" value={goals.proteinGrams} goal={goals.proteinGrams} unit="g" color="bg-blue-500" />
-        <MacroBar label="Carbs" value={goals.carbsGrams} goal={goals.carbsGrams} unit="g" color="bg-amber-500" />
-        <MacroBar label="Fat" value={goals.fatGrams} goal={goals.fatGrams} unit="g" color="bg-rose-500" />
-      </div>
-
-      {/* Options */}
-      <div>
-        <p className="text-xs text-slate-500 uppercase tracking-wider font-medium mb-2">Options</p>
-        <label className="flex items-center gap-3 cursor-pointer">
+        <button
+          onClick={() => onChange({ ...goals, includeSnacks: !goals.includeSnacks })}
+          className={cn(
+            "w-12 h-6 rounded-full transition-colors relative shrink-0",
+            goals.includeSnacks ? "bg-orange-500" : "bg-stone-700"
+          )}
+        >
           <div
-            onClick={() => update({ includeSnacks: !goals.includeSnacks })}
-            className={`w-10 h-5 rounded-full transition-colors cursor-pointer ${
-              goals.includeSnacks ? "bg-emerald-600" : "bg-slate-600"
-            } relative`}
-          >
-            <div
-              className={`absolute top-0.5 w-4 h-4 bg-white rounded-full shadow transition-transform ${
-                goals.includeSnacks ? "translate-x-5" : "translate-x-0.5"
-              }`}
-            />
-          </div>
-          <span className="text-sm text-slate-300">Include daily snacks</span>
-        </label>
+            className={cn(
+              "absolute top-1 w-4 h-4 bg-white rounded-full shadow transition-transform",
+              goals.includeSnacks ? "translate-x-7" : "translate-x-1"
+            )}
+          />
+        </button>
       </div>
 
       {/* Dietary restrictions */}
       <div>
-        <p className="text-xs text-slate-500 uppercase tracking-wider font-medium mb-2">
-          Dietary restrictions
-        </p>
+        <p className="text-sm font-semibold text-stone-200 mb-1">Any dietary preferences?</p>
+        <p className="text-xs text-stone-500 mb-4">Select all that apply — the AI will strictly follow these.</p>
         <div className="flex flex-wrap gap-2">
-          {RESTRICTIONS.map((r) => {
-            const active = goals.dietaryRestrictions.includes(r);
+          {RESTRICTIONS.map(({ label, value }) => {
+            const active = goals.dietaryRestrictions.includes(value);
             return (
               <button
-                key={r}
-                onClick={() => toggleRestriction(r)}
-                className={`px-3 py-1 rounded-full text-xs font-medium border transition-all ${
+                key={value}
+                onClick={() => toggleRestriction(value)}
+                className={cn(
+                  "px-3 py-1.5 rounded-full text-xs font-medium border transition-all",
                   active
-                    ? "border-emerald-500 bg-emerald-900/40 text-emerald-300"
-                    : "border-slate-600 bg-slate-800 text-slate-400 hover:border-slate-500"
-                }`}
+                    ? "border-orange-500 bg-orange-950/50 text-orange-300"
+                    : "border-stone-700 bg-stone-900 text-stone-400 hover:border-stone-600 hover:text-stone-300"
+                )}
               >
-                {r}
+                {label}
               </button>
             );
           })}

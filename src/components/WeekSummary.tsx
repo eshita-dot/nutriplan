@@ -1,59 +1,53 @@
 "use client";
 import { WeekPlan } from "@/lib/types";
+import { getCaloriePresetKey, CALORIE_PRESETS } from "@/lib/utils";
 
 interface Props {
   plan: WeekPlan;
 }
 
 export function WeekSummary({ plan }: Props) {
-  const totals = plan.days.reduce(
-    (acc, d) => ({
-      calories: acc.calories + d.totalCalories,
-      protein: acc.protein + d.totalProtein,
-      carbs: acc.carbs + d.totalCarbs,
-      fat: acc.fat + d.totalFat,
-    }),
-    { calories: 0, protein: 0, carbs: 0, fat: 0 }
-  );
+  const presetKey = getCaloriePresetKey(plan.goals.dailyCalories);
+  const preset = CALORIE_PRESETS.find((p) => p.key === presetKey) ?? CALORIE_PRESETS[1];
 
   const avg = {
-    calories: Math.round(totals.calories / plan.days.length),
-    protein: Math.round(totals.protein / plan.days.length),
-    carbs: Math.round(totals.carbs / plan.days.length),
-    fat: Math.round(totals.fat / plan.days.length),
+    calories: Math.round(plan.days.reduce((s, d) => s + d.totalCalories, 0) / plan.days.length),
+    protein: Math.round(plan.days.reduce((s, d) => s + d.totalProtein, 0) / plan.days.length),
   };
 
-  const stats = [
-    { label: "Avg Calories", value: avg.calories, unit: "kcal", color: "text-emerald-400" },
-    { label: "Avg Protein", value: avg.protein, unit: "g", color: "text-blue-400" },
-    { label: "Avg Carbs", value: avg.carbs, unit: "g", color: "text-amber-400" },
-    { label: "Avg Fat", value: avg.fat, unit: "g", color: "text-rose-400" },
-  ];
+  const daysInRange = plan.days.filter(
+    (d) => d.totalCalories >= preset.min && d.totalCalories <= preset.max
+  ).length;
 
   return (
     <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
-      {stats.map((s) => (
-        <div
-          key={s.label}
-          className="bg-slate-800/50 border border-slate-700 rounded-xl px-4 py-3 text-center"
-        >
-          <div className={`text-2xl font-bold ${s.color}`}>
-            {s.value}
-            <span className="text-sm font-normal text-slate-500 ml-1">{s.unit}</span>
-          </div>
-          <div className="text-xs text-slate-500 mt-0.5">{s.label}</div>
-          <div className="text-xs text-slate-600 mt-0.5">
-            target: {s.label.includes("Cal")
-              ? plan.goals.dailyCalories
-              : s.label.includes("Protein")
-              ? plan.goals.proteinGrams
-              : s.label.includes("Carbs")
-              ? plan.goals.carbsGrams
-              : plan.goals.fatGrams}
-            {s.unit}
-          </div>
-        </div>
-      ))}
+      <div className="bg-stone-900/60 border border-stone-800 rounded-2xl px-4 py-4 text-center">
+        <div className="text-2xl mb-1">🎯</div>
+        <div className="text-lg font-bold text-orange-400">~{Math.round(avg.calories / 50) * 50}</div>
+        <div className="text-xs text-stone-400 font-medium">avg kcal/day</div>
+        <div className="text-xs text-stone-600 mt-1">target {preset.range.split(" ")[0]}</div>
+      </div>
+
+      <div className="bg-stone-900/60 border border-stone-800 rounded-2xl px-4 py-4 text-center">
+        <div className="text-2xl mb-1">💪</div>
+        <div className="text-lg font-bold text-sky-400">~{Math.round(avg.protein / 5) * 5}g</div>
+        <div className="text-xs text-stone-400 font-medium">avg protein/day</div>
+        <div className="text-xs text-stone-600 mt-1">target ~{preset.protein}g</div>
+      </div>
+
+      <div className="bg-stone-900/60 border border-stone-800 rounded-2xl px-4 py-4 text-center">
+        <div className="text-2xl mb-1">✅</div>
+        <div className="text-lg font-bold text-green-400">{daysInRange}/{plan.days.length}</div>
+        <div className="text-xs text-stone-400 font-medium">days on target</div>
+        <div className="text-xs text-stone-600 mt-1">{preset.emoji} {preset.label}</div>
+      </div>
+
+      <div className="bg-stone-900/60 border border-stone-800 rounded-2xl px-4 py-4 text-center">
+        <div className="text-2xl mb-1">🍽️</div>
+        <div className="text-lg font-bold text-violet-400">{plan.days.length * (plan.goals.includeSnacks ? 4 : 3)}</div>
+        <div className="text-xs text-stone-400 font-medium">total meals</div>
+        <div className="text-xs text-stone-600 mt-1">{plan.goals.includeSnacks ? "with snacks" : "no snacks"}</div>
+      </div>
     </div>
   );
 }
