@@ -266,45 +266,43 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ day: dayPlan });
     }
 
-    // ── Full plan generation ──────────────────────────────────────
+    // ── Full plan generation (one API call per day to stay within TPM limits) ──
     const duration: string = body.duration ?? "7";
     const numDays = Math.min(7, Math.max(1, parseInt(duration) || 7));
     const dayNames = DAYS.slice(0, numDays);
 
-    const completion = await client.chat.completions.create({
-      model: "llama-3.1-8b-instant",
-      max_tokens: 8000,
-      response_format: { type: "json_object" },
-      messages: [
-        { role: "system", content: baseSystemPrompt() },
-        { role: "user", content: buildFullPrompt(ingredients, goals, numDays, dayNames) },
-      ],
-    });
+    const dayPlans: DayPlan[] = [];
 
-    const rawText = completion.choices[0]?.message?.content ?? "";
-    let parsed: { days: unknown[] };
-    try {
-      parsed = JSON.parse(rawText);
-    } catch {
-      const jsonMatch = rawText.match(/\{[\s\S]*\}/);
-      if (!jsonMatch) throw new Error("No valid JSON in response");
-      parsed = JSON.parse(jsonMatch[0]);
+    for (const dayName of dayNames) {
+      const otherDayMeals = dayPlans.map(
+        (d) => `${d.day}: ${[d.breakfast?.name, d.lunch?.name, d.dinner?.name].filter(Boolean).join(", ")}`
+      );
+
+      const completion = await client.chat.completions.create({
+        model: "llama-3.1-8b-instant",
+        max_tokens: 2500,
+        response_format: { type: "json_object" },
+        messages: [
+          { role: "system", content: baseSystemPrompt() },
+          { role: "user", content: buildDayPrompt(ingredients, goals, dayName, otherDayMeals) },
+        ],
+      });
+
+      const raw = JSON.parse(completion.choices[0]?.message?.content ?? "{}");
+      const d = raw.day as Record<string, unknown>;
+      if (!d) throw new Error(`Failed to generate day: ${dayName}`);
+
+      const rawSnacks = Array.isArray(d.snacks) ? (d.snacks as Record<string, unknown>[]) : [];
+      dayPlans.push(computeDayTotals({
+        day: dayName,
+        date: "",
+        breakfast: hydrateMeal(d.breakfast as Record<string, unknown> | null, "breakfast", ingredients),
+        lunch: hydrateMeal(d.lunch as Record<string, unknown> | null, "lunch", ingredients),
+        dinner: hydrateMeal(d.dinner as Record<string, unknown> | null, "dinner", ingredients),
+        snacks: rawSnacks.map((s) => hydrateMeal(s, "snack", ingredients) as Meal).filter(Boolean),
+        totalCalories: 0, totalProtein: 0, totalCarbs: 0, totalFat: 0,
+      }));
     }
-
-    const dayPlans: DayPlan[] = (parsed.days as Record<string, unknown>[]).map(
-      (d: Record<string, unknown>, idx: number) => {
-        const rawSnacks = Array.isArray(d.snacks) ? (d.snacks as Record<string, unknown>[]) : [];
-        return computeDayTotals({
-          day: DAYS[idx] ?? String(d.day),
-          date: "",
-          breakfast: hydrateMeal(d.breakfast as Record<string, unknown> | null, "breakfast", ingredients),
-          lunch: hydrateMeal(d.lunch as Record<string, unknown> | null, "lunch", ingredients),
-          dinner: hydrateMeal(d.dinner as Record<string, unknown> | null, "dinner", ingredients),
-          snacks: rawSnacks.map((s) => hydrateMeal(s, "snack", ingredients) as Meal).filter(Boolean),
-          totalCalories: 0, totalProtein: 0, totalCarbs: 0, totalFat: 0,
-        });
-      }
-    );
 
     const weekPlan: WeekPlan = {
       id: generateId(),
