@@ -190,14 +190,20 @@ function buildDayPrompt(
     ? `Already planned on other days: ${otherDayMeals.join("; ")} — make this day different.`
     : "";
 
-  return `Generate ONE full day (${dayName}) of meals for a busy professional.
-${avoidList}
-Available ingredients: ${ingredientList}
-Calorie target: ~${goals.dailyCalories} kcal/day | ${restrictions}
-${goals.includeSnacks ? "Include 1 evening snack." : "No snacks."}
-Lunch and dinner MUST include grain (roti/rice) + dal/sabzi.
+  const snackField = goals.includeSnacks
+    ? `"snacks":[{"name":"Roasted Makhana","description":"Light salted fox nuts","calories":150,"protein":4,"carbs":32,"fat":0,"prepTime":5,"instructions":["Dry roast makhana in a pan with a pinch of salt and ghee"],"ingredients":[{"name":"Makhana (Fox Nuts)","amount":30,"unit":"g"}]}]`
+    : `"snacks":[]`;
 
-Return JSON: {"day":{"day":"${dayName}","breakfast":{...},"lunch":{...},"dinner":{...},"snacks":[]}}`;
+  return `Generate ONE full day (${dayName}) of meals for a busy Indian professional.
+${avoidList}
+Available ingredients:\n${ingredientList}
+Calorie target: ~${goals.dailyCalories} kcal/day | ${restrictions}
+${goals.includeSnacks ? "Include 1 light evening snack (under 200 kcal)." : "No snacks."}
+Lunch and dinner MUST include grain (roti/rice/paratha) + dal or sabzi. Name them fully e.g. "Toor Dal + Aloo Gobi + Roti".
+
+Return this exact JSON structure:
+{"day":{"day":"${dayName}","breakfast":{"name":"Poha with Peas","description":"Fluffy flattened rice with peas and peanuts","calories":350,"protein":10,"carbs":58,"fat":8,"prepTime":15,"instructions":["Heat oil, add mustard seeds and curry leaves","Add onion, peas, stir in soaked poha with turmeric and salt","Garnish with coriander and lemon"],"ingredients":[{"name":"Poha (Flattened Rice)","amount":80,"unit":"g"}]},"lunch":{"name":"Toor Dal + Aloo Sabzi + Roti","description":"Comforting dal with potato curry and soft rotis","calories":550,"protein":22,"carbs":80,"fat":12,"prepTime":25,"instructions":["Pressure cook toor dal with turmeric","Make aloo sabzi with cumin, coriander and tomato","Roll and cook rotis on tawa"],"ingredients":[{"name":"Toor Dal (Arhar)","amount":60,"unit":"g"},{"name":"Potato (Aloo)","amount":100,"unit":"g"},{"name":"Whole Wheat Flour (Atta)","amount":60,"unit":"g"}]},"dinner":{"name":"Moong Dal + Palak Sabzi + Roti","description":"Light yellow dal with spinach and rotis","calories":480,"protein":20,"carbs":70,"fat":10,"prepTime":20,"instructions":["Cook moong dal till soft","Saute spinach with garlic and spices","Serve with fresh rotis"],"ingredients":[{"name":"Moong Dal (Yellow)","amount":50,"unit":"g"},{"name":"Spinach (Palak)","amount":80,"unit":"g"},{"name":"Whole Wheat Flour (Atta)","amount":60,"unit":"g"}]},${snackField}}}`;
+}
 }
 
 export async function POST(req: NextRequest) {
