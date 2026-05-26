@@ -1,4 +1,4 @@
-import { GoogleGenerativeAI } from "@google/generative-ai";
+import Groq from "groq-sdk";
 import { NextRequest, NextResponse } from "next/server";
 import { Ingredient, NutritionGoals, WeekPlan, DayPlan, Meal } from "@/lib/types";
 import { DAYS, generateId, computeDayTotals } from "@/lib/utils";
@@ -213,16 +213,24 @@ Respond with this JSON schema filled in with your generated meal (replace all <p
 
 export const maxDuration = 60;
 
-async function geminiJSON(apiKey: string, systemPrompt: string, userPrompt: string): Promise<Record<string, unknown>> {
-  const genAI = new GoogleGenerativeAI(apiKey);
-  const model = genAI.getGenerativeModel({
-    model: "gemini-2.0-flash",
-    systemInstruction: systemPrompt,
-    generationConfig: { responseMimeType: "application/json" },
-  });
-  const result = await model.generateContent(userPrompt);
-  const text = result.response.text();
-  return JSON.parse(text);
+type GroqParams = { model: string; max_tokens: number; response_format: { type: string }; messages: { role: string; content: string }[] };
+
+async function groqWithRetry(client: Groq, params: GroqParams) {
+  for (let attempt = 0; attempt < 3; attempt++) {
+    try {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      return await (client.chat.completions.create as (p: GroqParams) => Promise<any>)(params);
+    } catch (err: unknown) {
+      const msg = err instanceof Error ? err.message : String(err);
+      const waitMatch = msg.match(/try again in ([\d.]+)s/i);
+      if (waitMatch && attempt < 2) {
+        await new Promise((r) => setTimeout(r, Math.ceil(parseFloat(waitMatch[1]) * 1000) + 500));
+        continue;
+      }
+      throw err;
+    }
+  }
+  throw new Error("Service busy, please try again in a moment");
 }
 
 export async function POST(req: NextRequest) {
@@ -232,9 +240,10 @@ export async function POST(req: NextRequest) {
 
     if (!ingredients || ingredients.length === 0)
       return NextResponse.json({ error: "No ingredients provided" }, { status: 400 });
-    const apiKey = process.env.GEMINI_API_KEY ?? process.env.GOOGLE_AI_API_KEY ?? "";
-    if (!apiKey)
-      return NextResponse.json({ error: "GEMINI_API_KEY not configured" }, { status: 500 });
+    if (!process.env.GROQ_API_KEY)
+      return NextResponse.json({ error: "GROQ_API_KEY not configured" }, { status: 500 });
+
+    const client = new Groq({ apiKey: process.env.GROQ_API_KEY });
     const mode: string = body.mode ?? "full";
 
     // ── Single meal regeneration ──────────────────────────────────
@@ -242,7 +251,15 @@ export async function POST(req: NextRequest) {
       const { dayName, mealType, existingMeals = [] } = body as {
         dayName: string; mealType: string; existingMeals: string[];
       };
-      const raw = await geminiJSON(apiKey, baseSystemPrompt(), buildMealPrompt(ingredients, goals, dayName, mealType, existingMeals));
+      const completion = await groqWithRetry(client, {
+        model: "llama-3.1-8b-instant", max_tokens: 1500,
+        response_format: { type: "json_object" },
+        messages: [
+          { role: "system", content: baseSystemPrompt() },
+          { role: "user", content: buildMealPrompt(ingredients, goals, dayName, mealType, existingMeals) },
+        ],
+      });
+      const raw = JSON.parse(completion.choices[0]?.message?.content ?? "{}");
       const meal = hydrateMeal(raw.meal as Record<string, unknown>, mealType, ingredients);
       if (!meal) throw new Error("Failed to generate meal");
       return NextResponse.json({ meal });
@@ -251,7 +268,15 @@ export async function POST(req: NextRequest) {
     // ── Single day regeneration ───────────────────────────────────
     if (mode === "day") {
       const { dayName, otherDayMeals = [] } = body as { dayName: string; otherDayMeals: string[] };
-      const raw = await geminiJSON(apiKey, baseSystemPrompt(), buildDayPrompt(ingredients, goals, dayName, otherDayMeals));
+      const completion = await groqWithRetry(client, {
+        model: "llama-3.1-8b-instant", max_tokens: 2500,
+        response_format: { type: "json_object" },
+        messages: [
+          { role: "system", content: baseSystemPrompt() },
+          { role: "user", content: buildDayPrompt(ingredients, goals, dayName, otherDayMeals) },
+        ],
+      });
+      const raw = JSON.parse(completion.choices[0]?.message?.content ?? "{}");
       const d = raw.day as Record<string, unknown>;
       if (!d) throw new Error("Failed to generate day");
       const rawSnacks = Array.isArray(d.snacks) ? (d.snacks as Record<string, unknown>[]) : [];
@@ -277,7 +302,15 @@ export async function POST(req: NextRequest) {
       const otherDayMeals = dayPlans.map(
         (d) => `${d.day}: ${[d.breakfast?.name, d.lunch?.name, d.dinner?.name].filter(Boolean).join(", ")}`
       );
-      const raw = await geminiJSON(apiKey, baseSystemPrompt(), buildDayPrompt(ingredients, goals, dayName, otherDayMeals));
+      const completion = await groqWithRetry(client, {
+        model: "llama-3.1-8b-instant", max_tokens: 2500,
+        response_format: { type: "json_object" },
+        messages: [
+          { role: "system", content: baseSystemPrompt() },
+          { role: "user", content: buildDayPrompt(ingredients, goals, dayName, otherDayMeals) },
+        ],
+      });
+      const raw = JSON.parse(completion.choices[0]?.message?.content ?? "{}");
       const d = raw.day as Record<string, unknown>;
       if (!d) throw new Error(`Failed to generate day: ${dayName}`);
       const rawSnacks = Array.isArray(d.snacks) ? (d.snacks as Record<string, unknown>[]) : [];
