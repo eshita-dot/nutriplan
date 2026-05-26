@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 import { useState, useCallback } from "react";
 import { useQuery, useMutation } from "convex/react";
 import { api } from "../../convex/_generated/api";
@@ -208,7 +208,7 @@ export default function Home() {
           <div className="flex items-center gap-4 flex-wrap">
             {/* Brand */}
             <div className="flex items-center gap-2.5 shrink-0">
-              <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-orange-400 to-red-400 flex items-center justify-center text-lg shadow shadow-orange-200">
+              <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-teal-500 to-teal-700 flex items-center justify-center text-lg shadow shadow-teal-100">
                 🍽️
               </div>
               <div>
@@ -232,7 +232,7 @@ export default function Home() {
                 >
                   {t.label}
                   {t.count !== undefined && t.count > 0 && (
-                    <span className="w-4 h-4 rounded-full bg-orange-500 text-white text-[10px] flex items-center justify-center font-bold">
+                    <span className="w-4 h-4 rounded-full bg-teal-500 text-white text-[10px] flex items-center justify-center font-bold">
                       {t.count > 9 ? "9+" : t.count}
                     </span>
                   )}
@@ -250,7 +250,7 @@ export default function Home() {
                     className={cn(
                       "px-2.5 py-1.5 rounded-lg text-xs font-semibold transition-all",
                       duration === opt.value
-                        ? "bg-white text-orange-600 shadow-sm border border-stone-200"
+                        ? "bg-white text-teal-700 shadow-sm border border-stone-200"
                         : "text-stone-500 hover:text-stone-700"
                     )}
                   >
@@ -261,7 +261,7 @@ export default function Home() {
               <button
                 onClick={generate}
                 disabled={generating || isLoading || ingredients.length === 0}
-                className="flex items-center gap-2 bg-orange-500 hover:bg-orange-400 disabled:opacity-40 disabled:cursor-not-allowed px-4 py-2 rounded-xl text-xs font-bold text-white transition-all shadow shadow-orange-200"
+                className="flex items-center gap-2 bg-teal-500 hover:bg-teal-500 disabled:opacity-40 disabled:cursor-not-allowed px-4 py-2 rounded-xl text-xs font-bold text-white transition-all shadow shadow-teal-100"
               >
                 {generating ? (
                   <><RefreshCw size={14} className="animate-spin" />Cooking…</>
@@ -289,7 +289,7 @@ export default function Home() {
       <main className="max-w-7xl mx-auto px-4 sm:px-6 py-8">
         {isLoading ? (
           <div className="flex items-center justify-center py-32">
-            <div className="w-8 h-8 rounded-full border-2 border-orange-400 border-t-transparent animate-spin" />
+            <div className="w-8 h-8 rounded-full border-2 border-teal-400 border-t-transparent animate-spin" />
           </div>
         ) : (
           <>
@@ -337,7 +337,7 @@ export default function Home() {
                   <button
                     onClick={generate}
                     disabled={generating || ingredients.length === 0}
-                    className="flex items-center gap-2 bg-orange-500 hover:bg-orange-400 disabled:opacity-40 px-6 py-2.5 rounded-xl text-sm font-bold text-white transition-all"
+                    className="flex items-center gap-2 bg-teal-500 hover:bg-teal-500 disabled:opacity-40 px-6 py-2.5 rounded-xl text-sm font-bold text-white transition-all"
                   >
                     {generating ? <><RefreshCw size={15} className="animate-spin" />Cooking…</> : <><Sparkles size={15} />Generate My Plan</>}
                   </button>
@@ -412,7 +412,7 @@ export default function Home() {
                     </p>
                     <button
                       onClick={() => setTab("ingredients")}
-                      className="mt-6 px-6 py-3 bg-orange-500 hover:bg-orange-400 rounded-xl text-sm font-bold text-white transition-all"
+                      className="mt-6 px-6 py-3 bg-teal-500 hover:bg-teal-500 rounded-xl text-sm font-bold text-white transition-all"
                     >
                       Start with your pantry →
                     </button>
@@ -429,7 +429,7 @@ export default function Home() {
         <div className="fixed inset-0 bg-white/80 backdrop-blur-sm z-50 flex items-center justify-center">
           <div className="bg-white border border-stone-200 rounded-3xl p-10 text-center max-w-sm mx-4 shadow-2xl">
             <div className="text-5xl mb-6 animate-bounce">🍳</div>
-            <div className="w-8 h-8 rounded-full border-2 border-orange-400 border-t-transparent animate-spin mx-auto mb-5" />
+            <div className="w-8 h-8 rounded-full border-2 border-teal-400 border-t-transparent animate-spin mx-auto mb-5" />
             <h3 className="text-lg font-bold text-stone-800">Cooking up your plan</h3>
             <p className="text-sm text-stone-500 mt-2 leading-relaxed">
               The AI is crafting{" "}

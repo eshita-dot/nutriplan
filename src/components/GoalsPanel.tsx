@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 import { NutritionGoals } from "@/lib/types";
 import { cn, CALORIE_PRESETS, getCaloriePresetKey } from "@/lib/utils";
 
@@ -54,15 +54,15 @@ export function GoalsPanel({ goals, onChange }: Props) {
                 onClick={() => applyPreset(preset)}
                 className={cn(
                   "relative rounded-2xl p-4 text-left border-2 transition-all",
-                  active ? "border-orange-400 bg-orange-50" : "border-stone-200 bg-white hover:border-orange-200 hover:bg-orange-50/50"
+                  active ? "border-teal-400 bg-teal-50" : "border-stone-200 bg-white hover:border-teal-200 hover:bg-teal-50/50"
                 )}
               >
                 <div className="text-2xl mb-2">{preset.emoji}</div>
-                <div className={cn("font-bold text-sm", active ? "text-orange-700" : "text-stone-700")}>{preset.label}</div>
+                <div className={cn("font-bold text-sm", active ? "text-teal-800" : "text-stone-700")}>{preset.label}</div>
                 <div className="text-xs text-stone-500 mt-0.5">{preset.sublabel}</div>
-                <div className={cn("text-xs font-semibold mt-2", active ? "text-orange-500" : "text-stone-400")}>{preset.range}</div>
+                <div className={cn("text-xs font-semibold mt-2", active ? "text-teal-600" : "text-stone-400")}>{preset.range}</div>
                 {active && (
-                  <div className="absolute top-3 right-3 w-5 h-5 rounded-full bg-orange-500 flex items-center justify-center">
+                  <div className="absolute top-3 right-3 w-5 h-5 rounded-full bg-teal-500 flex items-center justify-center">
                     <svg width="10" height="8" viewBox="0 0 10 8" fill="none">
                       <path d="M1 4L3.5 6.5L9 1" stroke="white" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
                     </svg>
@@ -82,7 +82,7 @@ export function GoalsPanel({ goals, onChange }: Props) {
         </div>
         <button
           onClick={() => onChange({ ...goals, includeSnacks: !goals.includeSnacks })}
-          className={cn("w-12 h-6 rounded-full transition-colors relative shrink-0", goals.includeSnacks ? "bg-orange-500" : "bg-stone-300")}
+          className={cn("w-12 h-6 rounded-full transition-colors relative shrink-0", goals.includeSnacks ? "bg-teal-500" : "bg-stone-300")}
         >
           <div className={cn("absolute top-1 w-4 h-4 bg-white rounded-full shadow transition-transform", goals.includeSnacks ? "translate-x-7" : "translate-x-1")} />
         </button>
@@ -102,8 +102,8 @@ export function GoalsPanel({ goals, onChange }: Props) {
                 className={cn(
                   "px-3 py-1.5 rounded-full text-xs font-medium border transition-all",
                   active
-                    ? "border-orange-400 bg-orange-50 text-orange-700"
-                    : "border-stone-200 bg-white text-stone-600 hover:border-orange-200 hover:bg-orange-50/50"
+                    ? "border-teal-400 bg-teal-50 text-teal-800"
+                    : "border-stone-200 bg-white text-stone-600 hover:border-teal-200 hover:bg-teal-50/50"
                 )}
               >
                 {label}

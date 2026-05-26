@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 import { useState } from "react";
 import { Plus, Trash2, ChevronDown, ChevronUp, Search } from "lucide-react";
 import { Ingredient } from "@/lib/types";
@@ -183,7 +183,7 @@ export function IngredientsPanel({ ingredients, onAdd, onRemove }: Props) {
         onChange={(e) =>
           setForm({ ...form, [key]: type === "number" ? parseFloat(e.target.value) || 0 : e.target.value })
         }
-        className="w-full bg-stone-50 border border-stone-200 rounded-xl px-3 py-1.5 text-sm text-stone-800 focus:outline-none focus:border-orange-400 transition-colors"
+        className="w-full bg-stone-50 border border-stone-200 rounded-xl px-3 py-1.5 text-sm text-stone-800 focus:outline-none focus:border-teal-400 transition-colors"
       />
     </div>
   );
@@ -210,7 +210,7 @@ export function IngredientsPanel({ ingredients, onAdd, onRemove }: Props) {
                 placeholder="Search ingredients..."
                 value={search}
                 onChange={(e) => setSearch(e.target.value)}
-                className="w-full bg-stone-50 border border-stone-200 rounded-xl pl-9 pr-4 py-2 text-sm text-stone-700 placeholder-stone-400 focus:outline-none focus:border-orange-400 transition-colors"
+                className="w-full bg-stone-50 border border-stone-200 rounded-xl pl-9 pr-4 py-2 text-sm text-stone-700 placeholder-stone-400 focus:outline-none focus:border-teal-400 transition-colors"
               />
             </div>
 
@@ -224,8 +224,8 @@ export function IngredientsPanel({ ingredients, onAdd, onRemove }: Props) {
                     className={cn(
                       "px-3 py-1.5 rounded-full text-xs font-semibold transition-all border",
                       activeGroup === g.label
-                        ? "bg-orange-500 text-white border-orange-500"
-                        : "bg-white text-stone-600 border-stone-200 hover:border-orange-300 hover:text-orange-600"
+                        ? "bg-teal-500 text-white border-teal-500"
+                        : "bg-white text-stone-600 border-stone-200 hover:border-teal-300 hover:text-teal-700"
                     )}
                   >
                     {g.emoji} {g.label}
@@ -245,8 +245,8 @@ export function IngredientsPanel({ ingredients, onAdd, onRemove }: Props) {
                     className={cn(
                       "px-3 py-1.5 rounded-full text-xs font-medium border transition-all",
                       added
-                        ? "border-orange-400 bg-orange-50 text-orange-700 hover:bg-red-50 hover:border-red-300 hover:text-red-600"
-                        : "border-stone-200 bg-white text-stone-600 hover:border-orange-300 hover:bg-orange-50 hover:text-orange-700"
+                        ? "border-teal-400 bg-teal-50 text-teal-800 hover:bg-red-50 hover:border-red-300 hover:text-red-600"
+                        : "border-stone-200 bg-white text-stone-600 hover:border-teal-300 hover:bg-teal-50 hover:text-teal-800"
                     )}
                     title={added ? "Click to remove" : "Click to add"}
                   >
@@ -262,7 +262,7 @@ export function IngredientsPanel({ ingredients, onAdd, onRemove }: Props) {
             {!search && (
               <button
                 onClick={() => addGroup(currentGroup)}
-                className="text-xs text-orange-500 hover:text-orange-600 font-semibold transition-colors"
+                className="text-xs text-teal-600 hover:text-teal-700 font-semibold transition-colors"
               >
                 + Add all {currentGroup.label.toLowerCase()}
               </button>
@@ -278,7 +278,7 @@ export function IngredientsPanel({ ingredients, onAdd, onRemove }: Props) {
           className="w-full flex items-center justify-between px-5 py-4 text-sm font-bold text-stone-700 hover:bg-stone-50 transition-colors"
         >
           <span className="flex items-center gap-2">
-            <Plus size={15} className="text-orange-500" /> Add custom ingredient
+            <Plus size={15} className="text-teal-600" /> Add custom ingredient
           </span>
           {showForm ? <ChevronUp size={16} className="text-stone-400" /> : <ChevronDown size={16} className="text-stone-400" />}
         </button>
@@ -293,12 +293,12 @@ export function IngredientsPanel({ ingredients, onAdd, onRemove }: Props) {
                     type="number"
                     value={form.servingSize}
                     onChange={(e) => setForm({ ...form, servingSize: parseFloat(e.target.value) || 0 })}
-                    className="w-full bg-stone-50 border border-stone-200 rounded-xl px-3 py-1.5 text-sm text-stone-800 focus:outline-none focus:border-orange-400"
+                    className="w-full bg-stone-50 border border-stone-200 rounded-xl px-3 py-1.5 text-sm text-stone-800 focus:outline-none focus:border-teal-400"
                   />
                   <select
                     value={form.unit}
                     onChange={(e) => setForm({ ...form, unit: e.target.value })}
-                    className="bg-stone-50 border border-stone-200 rounded-xl px-2 text-sm text-stone-800 focus:outline-none focus:border-orange-400"
+                    className="bg-stone-50 border border-stone-200 rounded-xl px-2 text-sm text-stone-800 focus:outline-none focus:border-teal-400"
                   >
                     <option>g</option><option>ml</option><option>oz</option><option>cup</option><option>piece</option>
                   </select>
@@ -312,7 +312,7 @@ export function IngredientsPanel({ ingredients, onAdd, onRemove }: Props) {
             <button
               onClick={add}
               disabled={!form.name.trim()}
-              className="w-full bg-orange-500 hover:bg-orange-400 disabled:opacity-40 disabled:cursor-not-allowed text-white rounded-xl py-2.5 text-sm font-bold transition-colors"
+              className="w-full bg-teal-500 hover:bg-teal-500 disabled:opacity-40 disabled:cursor-not-allowed text-white rounded-xl py-2.5 text-sm font-bold transition-colors"
             >
               Add to pantry
             </button>

@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 import { WeekPlan } from "@/lib/types";
 import { getCaloriePresetKey, CALORIE_PRESETS } from "@/lib/utils";
 
@@ -16,7 +16,7 @@ export function WeekSummary({ plan }: { plan: WeekPlan }) {
   ).length;
 
   const stats = [
-    { emoji: "🎯", value: `~${Math.round(avg.calories / 50) * 50}`, unit: "kcal/day", label: "Avg calories", sub: `target ${preset.range.split(" ")[0]}`, color: "border-orange-200 bg-orange-50" },
+    { emoji: "🎯", value: `~${Math.round(avg.calories / 50) * 50}`, unit: "kcal/day", label: "Avg calories", sub: `target ${preset.range.split(" ")[0]}`, color: "border-teal-200 bg-teal-50" },
     { emoji: "💪", value: `~${Math.round(avg.protein / 5) * 5}g`, unit: "protein/day", label: "Avg protein", sub: `target ~${preset.protein}g`, color: "border-sky-200 bg-sky-50" },
     { emoji: "✅", value: `${daysInRange}/${plan.days.length}`, unit: "days", label: "On target", sub: `${preset.emoji} ${preset.label}`, color: "border-emerald-200 bg-emerald-50" },
     { emoji: "🍽️", value: String(plan.days.length * (plan.goals.includeSnacks ? 4 : 3)), unit: "meals total", label: "Planned", sub: plan.goals.includeSnacks ? "with evening snack" : "no snacks", color: "border-violet-200 bg-violet-50" },

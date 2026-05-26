@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 import { DayPlan, NutritionGoals } from "@/lib/types";
 import { MealCard } from "./MealCard";
 import { getCaloriePresetKey, CALORIE_PRESETS } from "@/lib/utils";
@@ -27,15 +27,15 @@ export function DayColumn({
       {/* Day header */}
       <div className={`rounded-2xl px-4 py-4 border ${
         isToday
-          ? "bg-orange-50 border-orange-200"
+          ? "bg-teal-50 border-teal-200"
           : "bg-white border-stone-200"
       }`}>
         <div className="flex items-center justify-between mb-2">
           <div>
-            <h2 className={`font-bold text-sm ${isToday ? "text-orange-700" : "text-stone-800"}`}>
+            <h2 className={`font-bold text-sm ${isToday ? "text-teal-800" : "text-stone-800"}`}>
               {day.day}
               {isToday && (
-                <span className="ml-2 text-xs font-normal bg-orange-100 text-orange-600 px-2 py-0.5 rounded-full">
+                <span className="ml-2 text-xs font-normal bg-teal-100 text-teal-700 px-2 py-0.5 rounded-full">
                   today
                 </span>
               )}
@@ -49,7 +49,7 @@ export function DayColumn({
               onClick={onRegenerateDay}
               disabled={isRegeneratingDay}
               title="Regenerate this day"
-              className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-stone-100 hover:bg-orange-50 border border-stone-200 hover:border-orange-300 text-stone-500 hover:text-orange-600 text-xs font-medium transition-colors disabled:opacity-40"
+              className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-stone-100 hover:bg-teal-50 border border-stone-200 hover:border-teal-300 text-stone-500 hover:text-teal-700 text-xs font-medium transition-colors disabled:opacity-40"
             >
               <RefreshCw size={11} className={isRegeneratingDay ? "animate-spin" : ""} />
               Redo day

@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 import { useState } from "react";
 import { Clock, ChevronDown, ChevronUp, RefreshCw } from "lucide-react";
 import { Meal } from "@/lib/types";
@@ -22,11 +22,11 @@ const TYPE_META: Record<string, {
 }> = {
   breakfast: {
     label: "Breakfast", emoji: "🌅",
-    cardBg: "bg-orange-50",
-    border: "border-orange-200",
-    badge: "bg-orange-100 text-orange-700 border-orange-200",
-    calColor: "text-orange-600",
-    stepBadge: "bg-orange-100 text-orange-600",
+    cardBg: "bg-teal-50",
+    border: "border-teal-200",
+    badge: "bg-teal-100 text-teal-800 border-teal-200",
+    calColor: "text-teal-700",
+    stepBadge: "bg-teal-100 text-teal-700",
   },
   lunch: {
     label: "Lunch", emoji: "☀️",
@@ -103,7 +103,7 @@ export function MealCard({ meal, compact = false, onRegenerate, isRegenerating }
                 onClick={(e) => { e.stopPropagation(); onRegenerate(); }}
                 disabled={isRegenerating}
                 title="Regenerate this meal"
-                className="p-1.5 rounded-lg bg-white/70 hover:bg-white border border-stone-200 text-stone-400 hover:text-orange-500 transition-colors disabled:opacity-40"
+                className="p-1.5 rounded-lg bg-white/70 hover:bg-white border border-stone-200 text-stone-400 hover:text-teal-600 transition-colors disabled:opacity-40"
               >
                 <RefreshCw size={12} className={isRegenerating ? "animate-spin" : ""} />
               </button>
